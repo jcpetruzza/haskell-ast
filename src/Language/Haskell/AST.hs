@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, DeriveGeneric #-}
 module Language.Haskell.AST
    (
     -- * Modules
@@ -15,10 +15,10 @@ module Language.Haskell.AST
     -- * Class Assertions and Contexts
     Context(..), FunDep(..), Asst(..),
     -- * Types
-    Type(..), Boxed(..), Kind(..), TyVarBind(..), Promoted(..),
+    Type(..), Boxed(..), Kind(..), TyVarBind(..), -- Promoted(..),
     -- * Expressions
     Exp(..), Stmt(..), QualStmt(..), FieldUpdate(..),
-    Alt(..), GuardedAlts(..), GuardedAlt(..), XAttr(..), IfAlt(..),
+    Alt(..), GuardedAlts(..), GuardedAlt(..), XAttr(..), -- IfAlt(..),
     -- * Patterns
     Pat(..), PatField(..), PXAttr(..), RPat(..), RPatOp(..),
     -- * Literals
@@ -141,7 +141,7 @@ data Module id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The head of a module, including the name and export specification.
-data ModuleHead id l = ModuleHead l id (Maybe (WarningText l)) (Maybe (ExportSpecList id l))
+data ModuleHead id l = ModuleHead l (ModuleName id l) (Maybe (WarningText l)) (Maybe (ExportSpecList id l))
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An explicit export specification. The 'Bool' is 'True' if the export has
@@ -164,7 +164,7 @@ data ExportSpec id l
                                            --   a datatype exported with some of its constructors.
      | EModuleContents l (ModuleName id l) -- ^ @module M@:
                                            --   re-export a module.
-     | EType id l (ExportSpec id l)           -- ^ @type x@: available with @-XExplicitNamespaces@
+     -- | EType id l (ExportSpec id l)           -- ^ @type x@: available with @-XExplicitNamespaces@
 
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -204,7 +204,7 @@ data ImportSpec id l
      | IThingWith l (Name id l) [CName id l]    -- ^ @T(C_1,...,C_n)@:
                                     --   a class imported with some of its methods, or
                                     --   a datatype imported with some of its constructors.
-     | IType l (ImportSpec id l)    -- ^ @type ...@ (-XExplicitNamespaces)
+     -- | IType l (ImportSpec id l)    -- ^ @type ...@ (-XExplicitNamespaces)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Associativity of an operator.
@@ -421,19 +421,19 @@ data Type id l
      | TyParen l (Type id l)                       -- ^ type surrounded by parentheses
      | TyInfix l (Type id l) (QName id l) (Type id l)    -- ^ infix type constructor
      | TyKind  l (Type id l) (Kind id l)              -- ^ type with explicit kind signature
-     | TyPromoted l (Promoted id l)                -- ^ @'K@, a promoted data type (-XDataKinds).
+     -- | TyPromoted l (Promoted id l)                -- ^ @'K@, a promoted data type (-XDataKinds).
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Bools here are True if there was a leading quote which may be
 -- left out. For example @'[k1,k2]@ means the same thing as @[k1,k2]@.
-data Promoted id l
-        = PromotedInteger l Integer String -- ^ parsed value and raw string
-        | PromotedString l String String -- ^ parsed value and raw string
-        | PromotedCon l Bool (QName id l)
-        | PromotedList l Bool [Promoted id l]
-        | PromotedTuple l [Promoted id l]
-        | PromotedUnit l
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+--data Promoted id l
+--        = PromotedInteger l Integer String -- ^ parsed value and raw string
+--        | PromotedString l String String -- ^ parsed value and raw string
+--        | PromotedCon l Bool (QName id l)
+--        | PromotedList l Bool [Promoted id l]
+--        | PromotedTuple l [Promoted id l]
+--        | PromotedUnit l
+--  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Flag denoting whether a tuple is boxed or unboxed.
 data Boxed = Boxed | Unboxed
@@ -451,10 +451,10 @@ data Kind id l
     | KindBang  l                    -- ^ @!@, the kind of unboxed types
     | KindFn    l (Kind id l) (Kind id l)  -- ^ @->@, the kind of a type constructor
     | KindParen l (Kind id l)           -- ^ a parenthesised kind
-    | KindVar   l (QName id l)          -- ^ @k@, a kind variable (-XPolyKinds)
-    | KindApp   l (Kind id l) (Kind id l)  -- ^ @k1 k2@
-    | KindTuple l [Kind id l]           -- ^ @'(k1,k2,k3)@, a promoted tuple
-    | KindList  l [Kind id l]           -- ^ @'[k1,k2,k3]@, a promoted list literal
+    | KindVar   l (Name id l)          -- ^ @k@, a kind variable (-XPolyKinds)
+    -- | KindApp   l (Kind id l) (Kind id l)  -- ^ @k1 k2@
+    -- | KindTuple l [Kind id l]           -- ^ @'(k1,k2,k3)@, a promoted tuple
+    -- | KindList  l [Kind id l]           -- ^ @'[k1,k2,k3]@, a promoted list literal
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
@@ -512,7 +512,7 @@ data Exp id l
     | Lambda l [Pat id l] (Exp id l)              -- ^ lambda expression
     | Let l (Binds id l) (Exp id l)               -- ^ local declarations with @let@ ... @in@ ...
     | If l (Exp id l) (Exp id l) (Exp id l)          -- ^ @if@ /exp/ @then@ /exp/ @else@ /exp/
-    | MultiIf l [IfAlt id l]                   -- ^ @if@ @|@ /exp/ @->@ /exp/ ...
+--    | MultiIf l [IfAlt id l]                   -- ^ @if@ @|@ /exp/ @->@ /exp/ ...
     | Case l (Exp id l) [Alt id l]                -- ^ @case@ /exp/ @of@ /alts/
     | Do l [Stmt id l]                         -- ^ @do@-expression:
                                             --   the last statement in the list
@@ -569,7 +569,7 @@ data Exp id l
     | RightArrHighApp l (Exp id l) (Exp id l)     -- ^ higher-order arrow application (from right): /exp/ @>>-@ /exp/
 
 -- LambdaCase
-    | LCase l [Alt id l]                       -- ^ @\case@ /alts/
+    -- | LCase l [Alt id l]                       -- ^ @\case@ /alts/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The name of an xml element or attribute,
@@ -767,10 +767,10 @@ data GuardedAlt id l
     = GuardedAlt l [Stmt id l] (Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
--- | An alternative in a multiway @if@ expression.
-data IfAlt id l
-    = IfAlt l (Exp id l) (Exp id l)
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+---- | An alternative in a multiway @if@ expression.
+--data IfAlt id l
+--    = IfAlt l (Exp id l) (Exp id l)
+--  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -----------------------------------------------------------------------------
 -- Builtin names.
@@ -966,13 +966,13 @@ instance Annotated (ImportSpec id) where
         IAbs l n        -> l
         IThingAll l n   -> l
         IThingWith l n cns  -> l
-        IType l m       -> l
+        -- IType l m       -> l
     amap f is = case is of
         IVar l n        -> IVar (f l) n
         IAbs l n        -> IAbs (f l) n
         IThingAll l n   -> IThingAll (f l) n
         IThingWith l n cns  -> IThingWith (f l) n cns
-        IType  l m      -> IType (f l) m
+        -- IType  l m      -> IType (f l) m
 
 instance Annotated Assoc where
     ann (AssocNone  l) = l
@@ -1165,7 +1165,7 @@ instance Annotated (Type id) where
       TyParen l t                   -> l
       TyInfix l ta qn tb            -> l
       TyKind  l t k                 -> l
-      TyPromoted l   p              -> l
+--      TyPromoted l   p              -> l
     amap f t = case t of
       TyForall l mtvs mcx t         -> TyForall (f l) mtvs mcx t
       TyFun   l t1 t2               -> TyFun (f l) t1 t2
@@ -1177,7 +1177,7 @@ instance Annotated (Type id) where
       TyParen l t                   -> TyParen (f l) t
       TyInfix l ta qn tb            -> TyInfix (f l) ta qn tb
       TyKind  l t k                 -> TyKind (f l) t k
-      TyPromoted l   p              -> TyPromoted (f l)   p
+--      TyPromoted l   p              -> TyPromoted (f l)   p
 
 instance Annotated (TyVarBind id) where
     ann (KindedVar   l n k) = l
@@ -1191,17 +1191,17 @@ instance Annotated (Kind id) where
     ann (KindFn   l k1 k2) = l
     ann (KindParen l k) = l
     ann (KindVar l v) = l
-    ann (KindApp l k1 k2) = l
-    ann (KindTuple l ks) = l
-    ann (KindList  l ks) = l
+    -- ann (KindApp l k1 k2) = l
+    -- ann (KindTuple l ks) = l
+    -- ann (KindList  l ks) = l
     amap f (KindStar l) = KindStar (f l)
     amap f (KindBang l) = KindBang (f l)
     amap f (KindFn   l k1 k2) = KindFn (f l) k1 k2
     amap f (KindParen l k) = KindParen (f l) k
     amap f (KindVar l n) = KindVar (f l) n
-    amap f (KindApp l k1 k2) = KindApp (f l) k1 k2
-    amap f (KindTuple l ks) = KindTuple (f l) ks
-    amap f (KindList  l ks) = KindList  (f l) ks
+    -- amap f (KindApp l k1 k2) = KindApp (f l) k1 k2
+    -- amap f (KindTuple l ks) = KindTuple (f l) ks
+    -- amap f (KindList  l ks) = KindList  (f l) ks
 
 instance Annotated (FunDep id) where
     ann (FunDep l ns1 ns2) = l
@@ -1255,7 +1255,7 @@ instance Annotated (Exp id) where
         Lambda l ps e   -> l
         Let l bs e      -> l
         If l ec et ee   -> l
-        MultiIf l alts  -> l
+--        MultiIf l alts  -> l
         Case l e alts   -> l
         Do l ss         -> l
         MDo l ss        -> l
@@ -1296,7 +1296,7 @@ instance Annotated (Exp id) where
         LeftArrHighApp  l e1 e2 -> l
         RightArrHighApp l e1 e2 -> l
 
-        LCase l alts -> l
+        -- LCase l alts -> l
 
     amap f e = case e of
         Var l qn        -> Var (f l) qn
@@ -1349,7 +1349,7 @@ instance Annotated (Exp id) where
         LeftArrHighApp  l e1 e2 -> LeftArrHighApp  (f l) e1 e2
         RightArrHighApp l e1 e2 -> RightArrHighApp (f l) e1 e2
 
-        LCase l alts -> LCase (f l) alts
+        -- LCase l alts -> LCase (f l) alts
 
 
 instance Annotated (XName id) where
@@ -1560,20 +1560,20 @@ instance Annotated (GuardedAlt id) where
     ann (GuardedAlt l ss e) = l
     amap f (GuardedAlt l ss e) = GuardedAlt (f l) ss e
 
-instance Annotated (Promoted id) where
-    ann (PromotedInteger l int raw) = l
-    ann (PromotedString l str raw) = l
-    ann (PromotedCon l b qn)   = l
-    ann (PromotedList l b ps)  = l
-    ann (PromotedTuple l ps) = l
-    ann (PromotedUnit l)     = l
-    amap f (PromotedInteger l int raw) = PromotedInteger (f l) int raw
-    amap f (PromotedString l str raw) = PromotedString (f l) str raw
-    amap f (PromotedCon l b qn)   = PromotedCon (f l) b qn
-    amap f (PromotedList l b ps)  = PromotedList  (f l) b ps
-    amap f (PromotedTuple l ps) = PromotedTuple (f l) ps
-    amap f (PromotedUnit l)     = PromotedUnit (f l)
+--instance Annotated (Promoted id) where
+--    ann (PromotedInteger l int raw) = l
+--    ann (PromotedString l str raw) = l
+--    ann (PromotedCon l b qn)   = l
+--    ann (PromotedList l b ps)  = l
+--    ann (PromotedTuple l ps) = l
+--    ann (PromotedUnit l)     = l
+--    amap f (PromotedInteger l int raw) = PromotedInteger (f l) int raw
+--    amap f (PromotedString l str raw) = PromotedString (f l) str raw
+--    amap f (PromotedCon l b qn)   = PromotedCon (f l) b qn
+--    amap f (PromotedList l b ps)  = PromotedList  (f l) b ps
+--    amap f (PromotedTuple l ps) = PromotedTuple (f l) ps
+--    amap f (PromotedUnit l)     = PromotedUnit (f l)
 
-instance Annotated (IfAlt id) where
-    ann (IfAlt l e1 e2) = l
-    amap f (IfAlt l e1 e2) = IfAlt (f l) e1 e2
+--instance Annotated (IfAlt id) where
+--    ann (IfAlt l e1 e2) = l
+--    amap f (IfAlt l e1 e2) = IfAlt (f l) e1 e2
