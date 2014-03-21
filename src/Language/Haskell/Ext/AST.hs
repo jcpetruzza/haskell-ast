@@ -1,114 +1,80 @@
 module Language.Haskell.Ext.AST
    (
-    -- * Modules
-    Module(..), ModuleHead(..), WarningText(..), ExportSpecList(..), ExportSpec(..),
-    ImportDecl(..), ImportSpecList(..), ImportSpec(..), Assoc(..),
-    -- * Declarations
-    Decl(..), DeclHead(..), InstHead(..), Binds(..), IPBind(..),
-    -- ** Type classes and instances
-    ClassDecl(..), InstDecl(..), Deriving(..),
-    -- ** Data type declarations
-    DataOrNew(..), ConDecl(..), FieldDecl(..), QualConDecl(..), GadtDecl(..), BangType(..),
-    -- ** Function bindings
-    Match(..), Rhs(..), GuardedRhs(..),
-    -- * Class Assertions and Contexts
-    Context(..), FunDep(..), Asst(..),
-    -- * Types
-    Type(..), B.Boxed(..), Kind(..), TyVarBind(..), -- Promoted(..),
-    -- * Expressions
-    Exp(..), Stmt(..), QualStmt(..), FieldUpdate(..),
-    Alt(..), GuardedAlts(..), GuardedAlt(..), XAttr(..), -- IfAlt(..),
-    -- * Patterns
-    Pat(..), PatField(..), PXAttr(..), RPat(..), RPatOp(..),
-    -- * Literals
-    Literal(..),
-    -- * Variables, Constructors and Operators
-    ModuleName(..), QName(..), Name(..), QOp(..), Op(..),
-    SpecialCon(..), CName(..), IPName(..), XName(..),
-
-    -- * Template Haskell
-    Bracket(..), Splice(..),
-
-    -- * FFI
-    Safety(..), CallConv(..),
-
-    -- * Pragmas
-    ModulePragma(..), B.Tool(..),
-    Rule(..), RuleVar(..), Activation(..),
-    Annotation(..)
-  )
+    module Language.Haskell.AST
+   ,module Language.Haskell.Ext.AST
+   )
 
 where
 
-import qualified Language.Haskell.AST as B
+import Language.Haskell.AST
 
 
-type ModuleName id l = B.ModuleName l id
-type SpecialCon l = B.SpecialCon l
-type QName id l = B.QName id l
-type Name id l = B.Name id l
-type IPName id l = B.IPName id l
-type QOp id l = B.QOp id l
-type Op id l = B.Op id l
-type CName id l = B.CName id l
-type Module id l = B.Module id l
-type ModuleHead id l = B.ModuleHead id l
-type ExportSpecList id l = B.ExportSpecList id l
-type ExportSpec id l = B.ExportSpec id l
-type ImportDecl id l = B.ImportDecl id l
-type ImportSpecList id l = B.ImportSpecList id l
-type ImportSpec id l = B.ImportSpec id l
-type Assoc l = B.Assoc l
-type Decl id l = B.Decl id l
-type Annotation id l = B.Annotation id l
-type DataOrNew l = B.DataOrNew l
-type DeclHead id l = B.DeclHead id l
-type InstHead id l = B.InstHead id l
-type Deriving id l = B.Deriving id l
-type Binds id l = B.Binds id l
-type IPBind id l = B.IPBind id l
-type Match id l = B.Match id l
-type QualConDecl id l = B.QualConDecl id l
-type ConDecl id l = B.ConDecl id l
-type FieldDecl id l = B.FieldDecl id l
-type GadtDecl id l = B.GadtDecl id l
-type ClassDecl id l = B.ClassDecl id l
-type InstDecl id l = B.InstDecl id l
-type BangType id l = B.BangType id l
-type Rhs id l = B.Rhs id l
-type GuardedRhs id l = B.GuardedRhs id l
-type Type id l = B.Type id l
--- type Promoted id l = B.Promoted id l
-type TyVarBind id l = B.TyVarBind id l
-type Kind id l = B.Kind id l
-type FunDep id l = B.FunDep id l
-type Context id l = B.Context id l
-type Asst id l = B.Asst id l
-type Literal l = B.Literal l
-type Exp id l = B.Exp id l
-type XName id l = B.XName id l
-type XAttr id l = B.XAttr id l
-type Bracket id l = B.Bracket id l
-type Splice id l = B.Splice id l
-type Safety l = B.Safety l
-type CallConv l = B.CallConv l
-type ModulePragma id l = B.ModulePragma id l
-type Activation l = B.Activation l
-type Rule id l = B.Rule id l
-type RuleVar id l = B.RuleVar id l
-type WarningText l = B.WarningText l
-type Pat id l = B.Pat id l
-type PXAttr id l = B.PXAttr id l
-type RPatOp l = B.RPatOp l
-type RPat id l = B.RPat id l
-type PatField id l = B.PatField id l
-type Stmt id l = B.Stmt id l
-type QualStmt id l = B.QualStmt id l
-type FieldUpdate id l = B.FieldUpdate id l
-type Alt id l = B.Alt id l
-type GuardedAlts id l = B.GuardedAlts id l
-type GuardedAlt id l = B.GuardedAlt id l
--- type IfAlt id l = B.IfAlt id l
+type ModuleName id l = GModuleName id l
+type SpecialCon l = GSpecialCon l
+type QName id l = GQName id l
+type Name id l = GName id l
+type IPName id l = GIPName id l
+type QOp id l = GQOp id l
+type Op id l = GOp id l
+type CName id l = GCName id l
+type Module id l = GModule id l
+type ModuleHead id l = GModuleHead id l
+type ExportSpecList id l = GExportSpecList id l
+type ExportSpec id l = GExportSpec id l
+type ImportDecl id l = GImportDecl id l
+type ImportSpecList id l = GImportSpecList id l
+type ImportSpec id l = GImportSpec id l
+type Assoc l = GAssoc l
+type Decl id l = GDecl id l
+type Annotation id l = GAnnotation id l
+type DataOrNew l = GDataOrNew l
+type DeclHead id l = GDeclHead id l
+type InstHead id l = GInstHead id l
+type Deriving id l = GDeriving id l
+type Binds id l = GBinds id l
+type IPBind id l = GIPBind id l
+type Match id l = GMatch id l
+type QualConDecl id l = GQualConDecl id l
+type ConDecl id l = GConDecl id l
+type FieldDecl id l = GFieldDecl id l
+type GadtDecl id l = GGadtDecl id l
+type ClassDecl id l = GClassDecl id l
+type InstDecl id l = GInstDecl id l
+type BangType id l = GBangType id l
+type Rhs id l = GRhs id l
+type GuardedRhs id l = GGuardedRhs id l
+type Type id l = GType id l
+-- type Promoted id l = GPromoted id l
+type TyVarBind id l = GTyVarBind id l
+type Kind id l = GKind id l
+type FunDep id l = GFunDep id l
+type Context id l = GContext id l
+type Asst id l = GAsst id l
+type Literal l = GLiteral l
+type Exp id l = GExp id l
+type XName id l = GXName id l
+type XAttr id l = GXAttr id l
+type Bracket id l = GBracket id l
+type Splice id l = GSplice id l
+type Safety l = GSafety l
+type CallConv l = GCallConv l
+type ModulePragma id l = GModulePragma id l
+type Activation l = GActivation l
+type Rule id l = GRule id l
+type RuleVar id l = GRuleVar id l
+type WarningText l = GWarningText l
+type Pat id l = GPat id l
+type PXAttr id l = GPXAttr id l
+type RPatOp l = GRPatOp l
+type RPat id l = GRPat id l
+type PatField id l = GPatField id l
+type Stmt id l = GStmt id l
+type QualStmt id l = GQualStmt id l
+type FieldUpdate id l = GFieldUpdate id l
+type Alt id l = GAlt id l
+type GuardedAlts id l = GGuardedAlts id l
+type GuardedAlt id l = GGuardedAlt id l
+-- type IfAlt id l = GIfAlt id l
 
 
 data NoExts

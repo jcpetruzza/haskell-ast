@@ -3,8 +3,11 @@ module Language.Haskell.Ext.Parser
 where
 
 
-import Language.Haskell.AST
 import qualified Language.Haskell.Exts.Annotated.Syntax as E
+import qualified Language.Haskell.Exts.Parser as P
+import Language.Haskell.Ext.AST
+
+-- parseModule
 
 fromHseModuleName :: E.ModuleName l -> ModuleName String l
 fromHseModuleName (E.ModuleName l s) = ModuleName l s

@@ -1,67 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, DeriveGeneric #-}
 module Language.Haskell.AST
-   (
-    -- * Modules
-    Module(..), ModuleHead(..), WarningText(..), ExportSpecList(..), ExportSpec(..),
-    ImportDecl(..), ImportSpecList(..), ImportSpec(..), Assoc(..),
-    -- * Declarations
-    Decl(..), DeclHead(..), InstHead(..), Binds(..), IPBind(..),
-    -- ** Type classes and instances
-    ClassDecl(..), InstDecl(..), Deriving(..),
-    -- ** Data type declarations
-    DataOrNew(..), ConDecl(..), FieldDecl(..), QualConDecl(..), GadtDecl(..), BangType(..),
-    -- ** Function bindings
-    Match(..), Rhs(..), GuardedRhs(..),
-    -- * Class Assertions and Contexts
-    Context(..), FunDep(..), Asst(..),
-    -- * Types
-    Type(..), Boxed(..), Kind(..), TyVarBind(..), -- Promoted(..),
-    -- * Expressions
-    Exp(..), Stmt(..), QualStmt(..), FieldUpdate(..),
-    Alt(..), GuardedAlts(..), GuardedAlt(..), XAttr(..), -- IfAlt(..),
-    -- * Patterns
-    Pat(..), PatField(..), PXAttr(..), RPat(..), RPatOp(..),
-    -- * Literals
-    Literal(..),
-    -- * Variables, Constructors and Operators
-    ModuleName(..), QName(..), Name(..), QOp(..), Op(..),
-    SpecialCon(..), CName(..), IPName(..), XName(..),
 
-    -- * Template Haskell
-    Bracket(..), Splice(..),
-
-    -- * FFI
-    Safety(..), CallConv(..),
-
-    -- * Pragmas
-    ModulePragma(..), Tool(..),
-    Rule(..), RuleVar(..), Activation(..),
-    Annotation(..),
-
-    -- * Builtin names
-
-    -- ** Modules
-    prelude_mod, main_mod,
-    -- ** Main function of a program
-    main_name,
-    -- ** Constructors
-    unit_con_name, tuple_con_name, list_cons_name, unboxed_singleton_con_name,
-    unit_con, tuple_con, unboxed_singleton_con,
-    -- ** Special identifiers
-    as_name, qualified_name, hiding_name, minus_name, bang_name, dot_name, star_name,
-    export_name, safe_name, unsafe_name, threadsafe_name,
-    stdcall_name, ccall_name, cplusplus_name, dotnet_name, jvm_name, js_name,
-    forall_name, family_name,
-    -- ** Type constructors
-    unit_tycon_name, fun_tycon_name, list_tycon_name, tuple_tycon_name, unboxed_singleton_tycon_name,
-    unit_tycon, fun_tycon, list_tycon, tuple_tycon, unboxed_singleton_tycon,
-
-    -- * Source coordinates
-    -- SrcLoc(..),
-
-    -- * Annotated trees
-    Annotated(..), (=~=),
-  )
  where
 
 
@@ -72,13 +11,13 @@ import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
 -- | The name of a Haskell module.
-data ModuleName id l = ModuleName l id
+data GModuleName id l = ModuleName l id
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Constructors with special syntax.
 -- These names are never qualified, and always refer to builtin type or
 -- data constructors.
-data SpecialCon l
+data GSpecialCon l
     = UnitCon l             -- ^ unit type and data constructor @()@
     | ListCon l             -- ^ list type constructor @[]@
     | FunCon  l             -- ^ function type constructor @->@
@@ -90,100 +29,100 @@ data SpecialCon l
 
 -- | This type is used to represent qualified variables, and also
 -- qualified constructors.
-data QName id l
-    = Qual    l (ModuleName id l) (Name id l)    -- ^ name qualified with a module name
-    | UnQual  l                   (Name id l)    -- ^ unqualified local name
-    | Special l (SpecialCon l)  -- ^ built-in constructor with special syntax
+data GQName id l
+    = Qual    l (GModuleName id l) (GName id l)    -- ^ name qualified with a module name
+    | UnQual  l                   (GName id l)    -- ^ unqualified local name
+    | Special l (GSpecialCon l)  -- ^ built-in constructor with special syntax
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | This type is used to represent variables, and also constructors.
-data Name id l
+data GName id l
     = Ident  l id   -- ^ /varid/ or /conid/.
     | Symbol l id   -- ^ /varsym/ or /consym/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An implicit parameter name.
-data IPName id l
+data GIPName id l
     = IPDup l id -- ^ ?/ident/, non-linear implicit parameter
     | IPLin l id -- ^ %/ident/, linear implicit parameter
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Possibly qualified infix operators (/qop/), appearing in expressions.
-data QOp id l
-    = QVarOp l (QName id l) -- ^ variable operator (/qvarop/)
-    | QConOp l (QName id l) -- ^ constructor operator (/qconop/)
+data GQOp id l
+    = QVarOp l (GQName id l) -- ^ variable operator (/qvarop/)
+    | QConOp l (GQName id l) -- ^ constructor operator (/qconop/)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Operators appearing in @infix@ declarations are never qualified.
-data Op id l
-    = VarOp l (Name id l)    -- ^ variable operator (/varop/)
-    | ConOp l (Name id l)    -- ^ constructor operator (/conop/)
+data GOp id l
+    = VarOp l (GName id l)    -- ^ variable operator (/varop/)
+    | ConOp l (GName id l)    -- ^ constructor operator (/conop/)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A name (/cname/) of a component of a class or data type in an @import@
 -- or export specification.
-data CName id l
-    = VarName l (Name id l) -- ^ name of a method or field
-    | ConName l (Name id l) -- ^ name of a data constructor
+data GCName id l
+    = VarName l (GName id l) -- ^ name of a method or field
+    | ConName l (GName id l) -- ^ name of a data constructor
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A complete Haskell source module.
-data Module id l
-    = Module l (Maybe (ModuleHead id l)) [ModulePragma id l] [ImportDecl id l] [Decl id l]
+data GModule id l
+    = Module l (Maybe (GModuleHead id l)) [GModulePragma id l] [GImportDecl id l] [GDecl id l]
     -- ^ an ordinary Haskell module
-    | XmlPage l (ModuleName id l) [ModulePragma id l] (XName id l) [XAttr id l] (Maybe (Exp id l)) [Exp id l]
+    | XmlPage l (GModuleName id l) [GModulePragma id l] (GXName id l) [GXAttr id l] (Maybe (GExp id l)) [GExp id l]
     -- ^ a module consisting of a single XML document. The ModuleName never appears in the source
     --   but is needed for semantic purposes, it will be the same as the file name.
-    | XmlHybrid l (Maybe (ModuleHead id l)) [ModulePragma id l] [ImportDecl id l] [Decl id l]
-                (XName id l) [XAttr id l] (Maybe (Exp id l)) [Exp id l]
+    | XmlHybrid l (Maybe (GModuleHead id l)) [GModulePragma id l] [GImportDecl id l] [GDecl id l]
+                (GXName id l) [GXAttr id l] (Maybe (GExp id l)) [GExp id l]
     -- ^ a hybrid module combining an XML document with an ordinary module
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The head of a module, including the name and export specification.
-data ModuleHead id l = ModuleHead l (ModuleName id l) (Maybe (WarningText l)) (Maybe (ExportSpecList id l))
+data GModuleHead id l = ModuleHead l (GModuleName id l) (Maybe (GWarningText l)) (Maybe (GExportSpecList id l))
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An explicit export specification. The 'Bool' is 'True' if the export has
 -- the @type@ keyword (@-XExplicitNamespaces@)
-data ExportSpecList id l
-    = ExportSpecList l [ExportSpec id l]
+data GExportSpecList id l
+    = ExportSpecList l [GExportSpec id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An item in a module's export specification.
-data ExportSpec id l
-     = EVar l (QName id l)                 -- ^ variable
-     | EAbs l (QName id l)                 -- ^ @T@:
+data GExportSpec id l
+     = EVar l (GQName id l)                 -- ^ variable
+     | EAbs l (GQName id l)                 -- ^ @T@:
                                            --   a class or datatype exported abstractly,
                                            --   or a type synonym.
-     | EThingAll l (QName id l)            -- ^ @T(..)@:
+     | EThingAll l (GQName id l)            -- ^ @T(..)@:
                                            --   a class exported with all of its methods, or
                                            --   a datatype exported with all of its constructors.
-     | EThingWith l (QName id l) [CName id l]     -- ^ @T(C_1,...,C_n)@:
+     | EThingWith l (GQName id l) [GCName id l]     -- ^ @T(C_1,...,C_n)@:
                                            --   a class exported with some of its methods, or
                                            --   a datatype exported with some of its constructors.
-     | EModuleContents l (ModuleName id l) -- ^ @module M@:
+     | EModuleContents l (GModuleName id l) -- ^ @module M@:
                                            --   re-export a module.
-     -- | EType id l (ExportSpec id l)           -- ^ @type x@: available with @-XExplicitNamespaces@
+     -- | EType id l (GExportSpec id l)           -- ^ @type x@: available with @-XExplicitNamespaces@
 
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An import declaration.
-data ImportDecl id l = ImportDecl
+data GImportDecl id l = ImportDecl
     { importAnn :: l                             -- ^ annotation, used by parser for position of the @import@ keyword.
-    , importModule :: ModuleName id l            -- ^ name of the module imported.
+    , importModule :: GModuleName id l            -- ^ name of the module imported.
     , importQualified :: Bool                    -- ^ imported @qualified@?
     , importSrc :: Bool                          -- ^ imported with @{-\# SOURCE \#-}@?
     , importPkg :: Maybe String                  -- ^ imported with explicit package name
-    , importAs :: Maybe (ModuleName id l)        -- ^ optional alias name in an @as@ clause.
-    , importSpecs :: Maybe (ImportSpecList id l)
+    , importAs :: Maybe (GModuleName id l)        -- ^ optional alias name in an @as@ clause.
+    , importSpecs :: Maybe (GImportSpecList id l)
             -- ^ optional list of import specifications.
     }
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An explicit import specification list.
-data ImportSpecList id l
-    = ImportSpecList l Bool [ImportSpec id l]
+data GImportSpecList id l
+    = ImportSpecList l Bool [GImportSpec id l]
             -- A list of import specifications.
             -- The 'Bool' is 'True' if the names are excluded
             -- by @hiding@.
@@ -194,136 +133,136 @@ data ImportSpecList id l
 
 -- | An import specification, representing a single explicit item imported
 --   (or hidden) from a module.
-data ImportSpec id l
-     = IVar l (Name id l)           -- ^ variable
-     | IAbs l (Name id l)           -- ^ @T@:
+data GImportSpec id l
+     = IVar l (GName id l)           -- ^ variable
+     | IAbs l (GName id l)           -- ^ @T@:
                                     --   the name of a class, datatype or type synonym.
-     | IThingAll l (Name id l)      -- ^ @T(..)@:
+     | IThingAll l (GName id l)      -- ^ @T(..)@:
                                     --   a class imported with all of its methods, or
                                     --   a datatype imported with all of its constructors.
-     | IThingWith l (Name id l) [CName id l]    -- ^ @T(C_1,...,C_n)@:
+     | IThingWith l (GName id l) [GCName id l]    -- ^ @T(C_1,...,C_n)@:
                                     --   a class imported with some of its methods, or
                                     --   a datatype imported with some of its constructors.
-     -- | IType l (ImportSpec id l)    -- ^ @type ...@ (-XExplicitNamespaces)
+     -- | IType l (GImportSpec id l)    -- ^ @type ...@ (-XExplicitNamespaces)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Associativity of an operator.
-data Assoc l
+data GAssoc l
      = AssocNone  l -- ^ non-associative operator (declared with @infix@)
      | AssocLeft  l -- ^ left-associative operator (declared with @infixl@).
      | AssocRight l -- ^ right-associative operator (declared with @infixr@)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top-level declaration.
-data Decl id l
-     = TypeDecl     l (DeclHead id l) (Type id l)
+data GDecl id l
+     = TypeDecl     l (GDeclHead id l) (GType id l)
      -- ^ A type declaration
-     | TypeFamDecl  l (DeclHead id l) (Maybe (Kind id l))
+     | TypeFamDecl  l (GDeclHead id l) (Maybe (GKind id l))
      -- ^ A type family declaration
-     | DataDecl     l (DataOrNew l) (Maybe (Context id l)) (DeclHead id l)                  [QualConDecl id l] (Maybe (Deriving id l))
+     | DataDecl     l (GDataOrNew l) (Maybe (GContext id l)) (GDeclHead id l)                  [GQualConDecl id l] (Maybe (GDeriving id l))
      -- ^ A data OR newtype declaration
-     | GDataDecl    l (DataOrNew l) (Maybe (Context id l)) (DeclHead id l) (Maybe (Kind id l)) [GadtDecl id l]    (Maybe (Deriving id l))
+     | GDataDecl    l (GDataOrNew l) (Maybe (GContext id l)) (GDeclHead id l) (Maybe (GKind id l)) [GGadtDecl id l]    (Maybe (GDeriving id l))
      -- ^ A data OR newtype declaration, GADT style
-     | DataFamDecl  l {-data-}      (Maybe (Context id l)) (DeclHead id l) (Maybe (Kind id l))
+     | DataFamDecl  l {-data-}      (Maybe (GContext id l)) (GDeclHead id l) (Maybe (GKind id l))
      -- ^ A data family declaration
-     | TypeInsDecl  l (Type id l) (Type id l)
+     | TypeInsDecl  l (GType id l) (GType id l)
      -- ^ A type family instance declaration
-     | DataInsDecl  l (DataOrNew l) (Type id l)                  [QualConDecl id l] (Maybe (Deriving id l))
+     | DataInsDecl  l (GDataOrNew l) (GType id l)                  [GQualConDecl id l] (Maybe (GDeriving id l))
      -- ^ A data family instance declaration
-     | GDataInsDecl l (DataOrNew l) (Type id l) (Maybe (Kind id l)) [GadtDecl id l]    (Maybe (Deriving id l))
+     | GDataInsDecl l (GDataOrNew l) (GType id l) (Maybe (GKind id l)) [GGadtDecl id l]    (Maybe (GDeriving id l))
      -- ^ A data family instance declaration, GADT style
-     | ClassDecl    l (Maybe (Context id l)) (DeclHead id l) [FunDep id l] (Maybe [ClassDecl id l])
+     | ClassDecl    l (Maybe (GContext id l)) (GDeclHead id l) [GFunDep id l] (Maybe [GClassDecl id l])
      -- ^ A declaration of a type class
-     | InstDecl     l (Maybe (Context id l)) (InstHead id l) (Maybe [InstDecl id l])
+     | InstDecl     l (Maybe (GContext id l)) (GInstHead id l) (Maybe [GInstDecl id l])
      -- ^ An declaration of a type class instance
-     | DerivDecl    l (Maybe (Context id l)) (InstHead id l)
+     | DerivDecl    l (Maybe (GContext id l)) (GInstHead id l)
      -- ^ A standalone deriving declaration
-     | InfixDecl    l (Assoc l) (Maybe Int) [Op id l]
+     | InfixDecl    l (GAssoc l) (Maybe Int) [GOp id l]
      -- ^ A declaration of operator fixity
-     | DefaultDecl  l [Type id l]
+     | DefaultDecl  l [GType id l]
      -- ^ A declaration of default types
-     | SpliceDecl   l (Exp id l)
+     | SpliceDecl   l (GExp id l)
      -- ^ A Template Haskell splicing declaration
-     | TypeSig      l [Name id l] (Type id l)
+     | TypeSig      l [GName id l] (GType id l)
      -- ^ A type signature declaration
-     | FunBind      l [Match id l]
+     | FunBind      l [GMatch id l]
      -- ^ A set of function binding clauses
-     | PatBind      l (Pat id l) (Maybe (Type id l)) (Rhs id l) {-where-} (Maybe (Binds id l))
+     | PatBind      l (GPat id l) (Maybe (GType id l)) (GRhs id l) {-where-} (Maybe (GBinds id l))
      -- ^ A pattern binding
-     | ForImp       l (CallConv l) (Maybe (Safety l)) (Maybe String) (Name id l) (Type id l)
+     | ForImp       l (GCallConv l) (Maybe (GSafety l)) (Maybe String) (GName id l) (GType id l)
      -- ^ A foreign import declaration
-     | ForExp       l (CallConv l)                    (Maybe String) (Name id l) (Type id l)
+     | ForExp       l (GCallConv l)                    (Maybe String) (GName id l) (GType id l)
      -- ^ A foreign export declaration
-     | RulePragmaDecl   l [Rule id l]
+     | RulePragmaDecl   l [GRule id l]
      -- ^ A RULES pragma
-     | DeprPragmaDecl   l [([Name id l], String)]
+     | DeprPragmaDecl   l [([GName id l], String)]
      -- ^ A DEPRECATED pragma
-     | WarnPragmaDecl   l [([Name id l], String)]
+     | WarnPragmaDecl   l [([GName id l], String)]
      -- ^ A WARNING pragma
-     | InlineSig        l Bool (Maybe (Activation l)) (QName id l)
+     | InlineSig        l Bool (Maybe (GActivation l)) (GQName id l)
      -- ^ An INLINE pragma
-     | InlineConlikeSig l      (Maybe (Activation l)) (QName id l)
+     | InlineConlikeSig l      (Maybe (GActivation l)) (GQName id l)
      -- ^ An INLINE CONLIKE pragma
-     | SpecSig          l      (Maybe (Activation l)) (QName id l) [Type id l]
+     | SpecSig          l      (Maybe (GActivation l)) (GQName id l) [GType id l]
      -- ^ A SPECIALISE pragma
-     | SpecInlineSig    l Bool (Maybe (Activation l)) (QName id l) [Type id l]
+     | SpecInlineSig    l Bool (Maybe (GActivation l)) (GQName id l) [GType id l]
      -- ^ A SPECIALISE INLINE pragma
-     | InstSig          l      (Maybe (Context id l))    (InstHead id l)
+     | InstSig          l      (Maybe (GContext id l))    (GInstHead id l)
      -- ^ A SPECIALISE instance pragma
-     | AnnPragma        l (Annotation id l)
+     | AnnPragma        l (GAnnotation id l)
      -- ^ An ANN pragma
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An annotation through an ANN pragma.
-data Annotation id l
-    = Ann       l (Name id l)  (Exp id l)
+data GAnnotation id l
+    = Ann       l (GName id l)  (GExp id l)
     -- ^ An annotation for a declared name.
-    | TypeAnn   l (Name id l)  (Exp id l)
+    | TypeAnn   l (GName id l)  (GExp id l)
     -- ^ An annotation for a declared type.
-    | ModuleAnn l           (Exp id l)
+    | ModuleAnn l           (GExp id l)
     -- ^ An annotation for the defining module.
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A flag stating whether a declaration is a data or newtype declaration.
-data DataOrNew l = DataType l | NewType l
+data GDataOrNew l = DataType l | NewType l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The head of a type or class declaration.
-data DeclHead id l
-    = DHead l (Name id l) [TyVarBind id l]
-    | DHInfix l (TyVarBind id l) (Name id l) (TyVarBind id l)
-    | DHParen l (DeclHead id l)
+data GDeclHead id l
+    = DHead l (GName id l) [GTyVarBind id l]
+    | DHInfix l (GTyVarBind id l) (GName id l) (GTyVarBind id l)
+    | DHParen l (GDeclHead id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The head of an instance declaration.
-data InstHead id l
-    = IHead l (QName id l) [Type id l]
-    | IHInfix l (Type id l) (QName id l) (Type id l)
-    | IHParen l (InstHead id l)
+data GInstHead id l
+    = IHead l (GQName id l) [GType id l]
+    | IHInfix l (GType id l) (GQName id l) (GType id l)
+    | IHParen l (GInstHead id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A deriving clause following a data type declaration.
-data Deriving id l = Deriving l [InstHead id l]
+data GDeriving id l = Deriving l [GInstHead id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A binding group inside a @let@ or @where@ clause.
-data Binds id l
-    = BDecls  l [Decl id l]     -- ^ An ordinary binding group
-    | IPBinds l [IPBind id l]   -- ^ A binding group for implicit parameters
+data GBinds id l
+    = BDecls  l [GDecl id l]     -- ^ An ordinary binding group
+    | IPBinds l [GIPBind id l]   -- ^ A binding group for implicit parameters
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A binding of an implicit parameter.
-data IPBind id l = IPBind l (IPName id l) (Exp id l)
+data GIPBind id l = IPBind l (GIPName id l) (GExp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Clauses of a function binding.
-data Match id l
-     = Match l      (Name id l) [Pat id l]         (Rhs id l) {-where-} (Maybe (Binds id l))
+data GMatch id l
+     = Match l      (GName id l) [GPat id l]         (GRhs id l) {-where-} (Maybe (GBinds id l))
         -- ^ A clause defined with prefix notation, i.e. the function name
         --  followed by its argument patterns, the right-hand side and an
         --  optional where clause.
-     | InfixMatch l (Pat id l) (Name id l) [Pat id l] (Rhs id l) {-where-} (Maybe (Binds id l))
+     | InfixMatch l (GPat id l) (GName id l) [GPat id l] (GRhs id l) {-where-} (Maybe (GBinds id l))
         -- ^ A clause defined with infix notation, i.e. first its first argument
         --  pattern, then the function name, then its following argument(s),
         --  the right-hand side and an optional where clause.
@@ -333,95 +272,95 @@ data Match id l
 
 -- | A single constructor declaration within a data type declaration,
 --   which may have an existential quantification binding.
-data QualConDecl id l
+data GQualConDecl id l
     = QualConDecl l
-        {-forall-} (Maybe [TyVarBind id l]) {- . -} (Maybe (Context id l))
-        {- => -} (ConDecl id l)
+        {-forall-} (Maybe [GTyVarBind id l]) {- . -} (Maybe (GContext id l))
+        {- => -} (GConDecl id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declaration of an ordinary data constructor.
-data ConDecl id l
-     = ConDecl l (Name id l) [BangType id l]
+data GConDecl id l
+     = ConDecl l (GName id l) [GBangType id l]
                 -- ^ ordinary data constructor
-     | InfixConDecl l (BangType id l) (Name id l) (BangType id l)
+     | InfixConDecl l (GBangType id l) (GName id l) (GBangType id l)
                 -- ^ infix data constructor
-     | RecDecl l (Name id l) [FieldDecl id l]
+     | RecDecl l (GName id l) [GFieldDecl id l]
                 -- ^ record constructor
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declaration of a (list of) named field(s).
-data FieldDecl id l = FieldDecl l [Name id l] (BangType id l)
+data GFieldDecl id l = FieldDecl l [GName id l] (GBangType id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A single constructor declaration in a GADT data type declaration.
-data GadtDecl id l
-    = GadtDecl l (Name id l) (Type id l)
+data GGadtDecl id l
+    = GadtDecl l (GName id l) (GType id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declarations inside a class declaration.
-data ClassDecl id l
-    = ClsDecl    l (Decl id l)
+data GClassDecl id l
+    = ClsDecl    l (GDecl id l)
             -- ^ ordinary declaration
-    | ClsDataFam l (Maybe (Context id l)) (DeclHead id l) (Maybe (Kind id l))
+    | ClsDataFam l (Maybe (GContext id l)) (GDeclHead id l) (Maybe (GKind id l))
             -- ^ declaration of an associated data type
-    | ClsTyFam   l                     (DeclHead id l) (Maybe (Kind id l))
+    | ClsTyFam   l                     (GDeclHead id l) (Maybe (GKind id l))
             -- ^ declaration of an associated type synonym
-    | ClsTyDef   l (Type id l) (Type id l)
+    | ClsTyDef   l (GType id l) (GType id l)
             -- ^ default choice for an associated type synonym
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declarations inside an instance declaration.
-data InstDecl id l
-    = InsDecl   l (Decl id l)
+data GInstDecl id l
+    = InsDecl   l (GDecl id l)
             -- ^ ordinary declaration
-    | InsType   l (Type id l) (Type id l)
+    | InsType   l (GType id l) (GType id l)
             -- ^ an associated type definition
-    | InsData   l (DataOrNew l) (Type id l) [QualConDecl id l] (Maybe (Deriving id l))
+    | InsData   l (GDataOrNew l) (GType id l) [GQualConDecl id l] (Maybe (GDeriving id l))
             -- ^ an associated data type implementation
-    | InsGData  l (DataOrNew l) (Type id l) (Maybe (Kind id l)) [GadtDecl id l] (Maybe (Deriving id l))
+    | InsGData  l (GDataOrNew l) (GType id l) (Maybe (GKind id l)) [GGadtDecl id l] (Maybe (GDeriving id l))
             -- ^ an associated data type implemented using GADT style
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The type of a constructor argument or field, optionally including
 --   a strictness annotation.
-data BangType id l
-     = BangedTy   l (Type id l) -- ^ strict component, marked with \"@!@\"
-     | UnBangedTy l (Type id l) -- ^ non-strict component
-     | UnpackedTy l (Type id l) -- ^ unboxed component, marked with an UNPACK pragma
+data GBangType id l
+     = BangedTy   l (GType id l) -- ^ strict component, marked with \"@!@\"
+     | UnBangedTy l (GType id l) -- ^ non-strict component
+     | UnpackedTy l (GType id l) -- ^ unboxed component, marked with an UNPACK pragma
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The right hand side of a function or pattern binding.
-data Rhs id l
-     = UnGuardedRhs l (Exp id l) -- ^ unguarded right hand side (/exp/)
-     | GuardedRhss  l [GuardedRhs id l]
+data GRhs id l
+     = UnGuardedRhs l (GExp id l) -- ^ unguarded right hand side (/exp/)
+     | GuardedRhss  l [GGuardedRhs id l]
                 -- ^ guarded right hand side (/gdrhs/)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A guarded right hand side @|@ /stmts/ @=@ /exp/.
 --   The guard is a series of statements when using pattern guards,
 --   otherwise it will be a single qualifier expression.
-data GuardedRhs id l
-     = GuardedRhs l [Stmt id l] (Exp id l)
+data GGuardedRhs id l
+     = GuardedRhs l [GStmt id l] (GExp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A type qualified with a context.
 --   An unqualified type has an empty context.
-data Type id l
+data GType id l
      = TyForall l
-        (Maybe [TyVarBind id l])
-        (Maybe (Context id l))
-        (Type id l)                                -- ^ qualified type
-     | TyFun   l (Type id l) (Type id l)              -- ^ function type
-     | TyTuple l Boxed [Type id l]                 -- ^ tuple type, possibly boxed
-     | TyList  l (Type id l)                       -- ^ list syntax, e.g. [a], as opposed to [] a
-     | TyApp   l (Type id l) (Type id l)              -- ^ application of a type constructor
-     | TyVar   l (Name id l)                       -- ^ type variable
-     | TyCon   l (QName id l)                      -- ^ named type or type constructor
-     | TyParen l (Type id l)                       -- ^ type surrounded by parentheses
-     | TyInfix l (Type id l) (QName id l) (Type id l)    -- ^ infix type constructor
-     | TyKind  l (Type id l) (Kind id l)              -- ^ type with explicit kind signature
-     -- | TyPromoted l (Promoted id l)                -- ^ @'K@, a promoted data type (-XDataKinds).
+        (Maybe [GTyVarBind id l])
+        (Maybe (GContext id l))
+        (GType id l)                                -- ^ qualified type
+     | TyFun   l (GType id l) (GType id l)              -- ^ function type
+     | TyTuple l Boxed [GType id l]                 -- ^ tuple type, possibly boxed
+     | TyList  l (GType id l)                       -- ^ list syntax, e.g. [a], as opposed to [] a
+     | TyApp   l (GType id l) (GType id l)              -- ^ application of a type constructor
+     | TyVar   l (GName id l)                       -- ^ type variable
+     | TyCon   l (GQName id l)                      -- ^ named type or type constructor
+     | TyParen l (GType id l)                       -- ^ type surrounded by parentheses
+     | TyInfix l (GType id l) (GQName id l) (GType id l)    -- ^ infix type constructor
+     | TyKind  l (GType id l) (GKind id l)              -- ^ type with explicit kind signature
+     -- | TyPromoted l (GPromoted id l)                -- ^ @'K@, a promoted data type (-XDataKinds).
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Bools here are True if there was a leading quote which may be
@@ -429,9 +368,9 @@ data Type id l
 --data Promoted id l
 --        = PromotedInteger l Integer String -- ^ parsed value and raw string
 --        | PromotedString l String String -- ^ parsed value and raw string
---        | PromotedCon l Bool (QName id l)
---        | PromotedList l Bool [Promoted id l]
---        | PromotedTuple l [Promoted id l]
+--        | PromotedCon l Bool (GQName id l)
+--        | PromotedList l Bool [GPromoted id l]
+--        | PromotedTuple l [GPromoted id l]
 --        | PromotedUnit l
 --  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -440,35 +379,35 @@ data Boxed = Boxed | Unboxed
   deriving (Eq,Ord,Show,Typeable,Data)
 
 -- | A type variable declaration, optionally with an explicit kind annotation.
-data TyVarBind id l
-    = KindedVar   l (Name id l) (Kind id l)  -- ^ variable binding with kind annotation
-    | UnkindedVar l (Name id l)           -- ^ ordinary variable binding
+data GTyVarBind id l
+    = KindedVar   l (GName id l) (GKind id l)  -- ^ variable binding with kind annotation
+    | UnkindedVar l (GName id l)           -- ^ ordinary variable binding
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An explicit kind annotation.
-data Kind id l
+data GKind id l
     = KindStar  l                    -- ^ @*@, the kind of types
     | KindBang  l                    -- ^ @!@, the kind of unboxed types
-    | KindFn    l (Kind id l) (Kind id l)  -- ^ @->@, the kind of a type constructor
-    | KindParen l (Kind id l)           -- ^ a parenthesised kind
-    | KindVar   l (Name id l)          -- ^ @k@, a kind variable (-XPolyKinds)
-    -- | KindApp   l (Kind id l) (Kind id l)  -- ^ @k1 k2@
-    -- | KindTuple l [Kind id l]           -- ^ @'(k1,k2,k3)@, a promoted tuple
-    -- | KindList  l [Kind id l]           -- ^ @'[k1,k2,k3]@, a promoted list literal
+    | KindFn    l (GKind id l) (GKind id l)  -- ^ @->@, the kind of a type constructor
+    | KindParen l (GKind id l)           -- ^ a parenthesised kind
+    | KindVar   l (GName id l)          -- ^ @k@, a kind variable (-XPolyKinds)
+    -- | KindApp   l (GKind id l) (GKind id l)  -- ^ @k1 k2@
+    -- | KindTuple l [GKind id l]           -- ^ @'(k1,k2,k3)@, a promoted tuple
+    -- | KindList  l [GKind id l]           -- ^ @'[k1,k2,k3]@, a promoted list literal
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A functional dependency, given on the form
 --   l1 l2 ... ln -> r2 r3 .. rn
-data FunDep id l
-    = FunDep l [Name id l] [Name id l]
+data GFunDep id l
+    = FunDep l [GName id l] [GName id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A context is a set of assertions
-data Context id l
-    = CxSingle l (Asst id l)
-    | CxTuple  l [Asst id l]
-    | CxParen  l (Context id l)
+data GContext id l
+    = CxSingle l (GAsst id l)
+    | CxTuple  l [GAsst id l]
+    | CxParen  l (GContext id l)
     | CxEmpty  l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -476,18 +415,18 @@ data Context id l
 --   In Haskell 98, the argument would be a /tyvar/, but this definition
 --   allows multiple parameters, and allows them to be /type/s.
 --   Also extended with support for implicit parameters and equality constraints.
-data Asst id l
-        = ClassA l (QName id l) [Type id l]           -- ^ ordinary class assertion
-        | InfixA l (Type id l) (QName id l) (Type id l)  -- ^ class assertion where the class name is given infix
-        | IParam l (IPName id l) (Type id l)          -- ^ implicit parameter assertion
-        | EqualP l (Type id l) (Type id l)            -- ^ type equality constraint
+data GAsst id l
+        = ClassA l (GQName id l) [GType id l]           -- ^ ordinary class assertion
+        | InfixA l (GType id l) (GQName id l) (GType id l)  -- ^ class assertion where the class name is given infix
+        | IParam l (GIPName id l) (GType id l)          -- ^ implicit parameter assertion
+        | EqualP l (GType id l) (GType id l)            -- ^ type equality constraint
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | /literal/
 -- Values of this type hold the abstract value of the literal, along with the
 -- precise string representation used.  For example, @10@, @0o12@ and @0xa@
 -- have the same value representation, but each carry a different string representation.
-data Literal l
+data GLiteral l
     = Char       l Char     String     -- ^ character literal
     | String     l String   String     -- ^ string literal
     | Int        l Integer  String     -- ^ integer literal
@@ -501,111 +440,111 @@ data Literal l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Haskell expressions.
-data Exp id l
-    = Var l (QName id l)                       -- ^ variable
-    | IPVar l (IPName id l)                    -- ^ implicit parameter variable
-    | Con l (QName id l)                       -- ^ data constructor
-    | Lit l (Literal l)                     -- ^ literal constant
-    | InfixApp l (Exp id l) (QOp id l) (Exp id l)    -- ^ infix application
-    | App l (Exp id l) (Exp id l)                 -- ^ ordinary application
-    | NegApp l (Exp id l)                      -- ^ negation expression @-/exp/@ (unary minus)
-    | Lambda l [Pat id l] (Exp id l)              -- ^ lambda expression
-    | Let l (Binds id l) (Exp id l)               -- ^ local declarations with @let@ ... @in@ ...
-    | If l (Exp id l) (Exp id l) (Exp id l)          -- ^ @if@ /exp/ @then@ /exp/ @else@ /exp/
---    | MultiIf l [IfAlt id l]                   -- ^ @if@ @|@ /exp/ @->@ /exp/ ...
-    | Case l (Exp id l) [Alt id l]                -- ^ @case@ /exp/ @of@ /alts/
-    | Do l [Stmt id l]                         -- ^ @do@-expression:
+data GExp id l
+    = Var l (GQName id l)                       -- ^ variable
+    | IPVar l (GIPName id l)                    -- ^ implicit parameter variable
+    | Con l (GQName id l)                       -- ^ data constructor
+    | Lit l (GLiteral l)                     -- ^ literal constant
+    | InfixApp l (GExp id l) (GQOp id l) (GExp id l)    -- ^ infix application
+    | App l (GExp id l) (GExp id l)                 -- ^ ordinary application
+    | NegApp l (GExp id l)                      -- ^ negation expression @-/exp/@ (unary minus)
+    | Lambda l [GPat id l] (GExp id l)              -- ^ lambda expression
+    | Let l (GBinds id l) (GExp id l)               -- ^ local declarations with @let@ ... @in@ ...
+    | If l (GExp id l) (GExp id l) (GExp id l)          -- ^ @if@ /exp/ @then@ /exp/ @else@ /exp/
+--    | MultiIf l [GIfAlt id l]                   -- ^ @if@ @|@ /exp/ @->@ /exp/ ...
+    | Case l (GExp id l) [GAlt id l]                -- ^ @case@ /exp/ @of@ /alts/
+    | Do l [GStmt id l]                         -- ^ @do@-expression:
                                             --   the last statement in the list
                                             --   should be an expression.
-    | MDo l [Stmt id l]                        -- ^ @mdo@-expression
-    | Tuple l Boxed [Exp id l]                 -- ^ tuple expression
-    | TupleSection l Boxed [Maybe (Exp id l)]  -- ^ tuple section expression, e.g. @(,,3)@
-    | List l [Exp id l]                        -- ^ list expression
-    | Paren l (Exp id l)                       -- ^ parenthesised expression
-    | LeftSection l (Exp id l) (QOp id l)         -- ^ left section @(@/exp/ /qop/@)@
-    | RightSection l (QOp id l) (Exp id l)        -- ^ right section @(@/qop/ /exp/@)@
-    | RecConstr l (QName id l) [FieldUpdate id l] -- ^ record construction expression
-    | RecUpdate l (Exp id l)   [FieldUpdate id l] -- ^ record update expression
-    | EnumFrom l (Exp id l)                    -- ^ unbounded arithmetic sequence,
+    | MDo l [GStmt id l]                        -- ^ @mdo@-expression
+    | Tuple l Boxed [GExp id l]                 -- ^ tuple expression
+    | TupleSection l Boxed [Maybe (GExp id l)]  -- ^ tuple section expression, e.g. @(,,3)@
+    | List l [GExp id l]                        -- ^ list expression
+    | Paren l (GExp id l)                       -- ^ parenthesised expression
+    | LeftSection l (GExp id l) (GQOp id l)         -- ^ left section @(@/exp/ /qop/@)@
+    | RightSection l (GQOp id l) (GExp id l)        -- ^ right section @(@/qop/ /exp/@)@
+    | RecConstr l (GQName id l) [GFieldUpdate id l] -- ^ record construction expression
+    | RecUpdate l (GExp id l)   [GFieldUpdate id l] -- ^ record update expression
+    | EnumFrom l (GExp id l)                    -- ^ unbounded arithmetic sequence,
                                             --   incrementing by 1: @[from ..]@
-    | EnumFromTo l (Exp id l) (Exp id l)          -- ^ bounded arithmetic sequence,
+    | EnumFromTo l (GExp id l) (GExp id l)          -- ^ bounded arithmetic sequence,
                                             --   incrementing by 1 @[from .. to]@
-    | EnumFromThen l (Exp id l) (Exp id l)        -- ^ unbounded arithmetic sequence,
+    | EnumFromThen l (GExp id l) (GExp id l)        -- ^ unbounded arithmetic sequence,
                                             --   with first two elements given @[from, then ..]@
-    | EnumFromThenTo l (Exp id l) (Exp id l) (Exp id l)
+    | EnumFromThenTo l (GExp id l) (GExp id l) (GExp id l)
                                             -- ^ bounded arithmetic sequence,
                                             --   with first two elements given @[from, then .. to]@
-    | ListComp l (Exp id l) [QualStmt id l]       -- ^ ordinary list comprehension
-    | ParComp  l (Exp id l) [[QualStmt id l]]     -- ^ parallel list comprehension
-    | ExpTypeSig l (Exp id l) (Type id l)         -- ^ expression with explicit type signature
+    | ListComp l (GExp id l) [GQualStmt id l]       -- ^ ordinary list comprehension
+    | ParComp  l (GExp id l) [[GQualStmt id l]]     -- ^ parallel list comprehension
+    | ExpTypeSig l (GExp id l) (GType id l)         -- ^ expression with explicit type signature
 
-    | VarQuote l (QName id l)                  -- ^ @'x@ for template haskell reifying of expressions
-    | TypQuote l (QName id l)                  -- ^ @''T@ for template haskell reifying of types
-    | BracketExp l (Bracket id l)              -- ^ template haskell bracket expression
-    | SpliceExp l (Splice id l)                -- ^ template haskell splice expression
+    | VarQuote l (GQName id l)                  -- ^ @'x@ for template haskell reifying of expressions
+    | TypQuote l (GQName id l)                  -- ^ @''T@ for template haskell reifying of types
+    | BracketExp l (GBracket id l)              -- ^ template haskell bracket expression
+    | SpliceExp l (GSplice id l)                -- ^ template haskell splice expression
     | QuasiQuote l String String            -- ^ quasi-quotaion: @[$/name/| /string/ |]@
 
 -- Hsx
-    | XTag l (XName id l) [XAttr id l] (Maybe (Exp id l)) [Exp id l]
+    | XTag l (GXName id l) [GXAttr id l] (Maybe (GExp id l)) [GExp id l]
                                             -- ^ xml element, with attributes and children
-    | XETag l (XName id l) [XAttr id l] (Maybe (Exp id l))
+    | XETag l (GXName id l) [GXAttr id l] (Maybe (GExp id l))
                                             -- ^ empty xml element, with attributes
     | XPcdata l String                      -- ^ PCDATA child element
-    | XExpTag l (Exp id l)                     -- ^ escaped haskell expression inside xml
-    | XChildTag l [Exp id l]                   -- ^ children of an xml element
+    | XExpTag l (GExp id l)                     -- ^ escaped haskell expression inside xml
+    | XChildTag l [GExp id l]                   -- ^ children of an xml element
 
 
 -- Pragmas
-    | CorePragma l      String (Exp id l)      -- ^ CORE pragma
-    | SCCPragma  l      String (Exp id l)      -- ^ SCC pragma
-    | GenPragma  l      String (Int, Int) (Int, Int) (Exp id l)
+    | CorePragma l      String (GExp id l)      -- ^ CORE pragma
+    | SCCPragma  l      String (GExp id l)      -- ^ SCC pragma
+    | GenPragma  l      String (Int, Int) (Int, Int) (GExp id l)
                                             -- ^ GENERATED pragma
 
 -- Arrows
-    | Proc            l (Pat id l) (Exp id l)     -- ^ arrows proc: @proc@ /pat/ @->@ /exp/
-    | LeftArrApp      l (Exp id l) (Exp id l)     -- ^ arrow application (from left): /exp/ @-<@ /exp/
-    | RightArrApp     l (Exp id l) (Exp id l)     -- ^ arrow application (from right): /exp/ @>-@ /exp/
-    | LeftArrHighApp  l (Exp id l) (Exp id l)     -- ^ higher-order arrow application (from left): /exp/ @-<<@ /exp/
-    | RightArrHighApp l (Exp id l) (Exp id l)     -- ^ higher-order arrow application (from right): /exp/ @>>-@ /exp/
+    | Proc            l (GPat id l) (GExp id l)     -- ^ arrows proc: @proc@ /pat/ @->@ /exp/
+    | LeftArrApp      l (GExp id l) (GExp id l)     -- ^ arrow application (Gfrom left): /exp/ @-<@ /exp/
+    | RightArrApp     l (GExp id l) (GExp id l)     -- ^ arrow application (from right): /exp/ @>-@ /exp/
+    | LeftArrHighApp  l (GExp id l) (GExp id l)     -- ^ higher-order arrow application (Gfrom left): /exp/ @-<<@ /exp/
+    | RightArrHighApp l (GExp id l) (GExp id l)     -- ^ higher-order arrow application (from right): /exp/ @>>-@ /exp/
 
 -- LambdaCase
-    -- | LCase l [Alt id l]                       -- ^ @\case@ /alts/
+    -- | LCase l [GAlt id l]                       -- ^ @\case@ /alts/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The name of an xml element or attribute,
 --   possibly qualified with a namespace.
-data XName id l
+data GXName id l
     = XName l String              -- <name ...
     | XDomName l String String    -- <dom:name ...
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An xml attribute, which is a name-expression pair.
-data XAttr id l = XAttr l (XName id l) (Exp id l)
+data GXAttr id l = XAttr l (GXName id l) (GExp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A template haskell bracket expression.
-data Bracket id l
-    = ExpBracket l (Exp id l)        -- ^ expression bracket: @[| ... |]@
-    | PatBracket l (Pat id l)        -- ^ pattern bracket: @[p| ... |]@
-    | TypeBracket l (Type id l)      -- ^ type bracket: @[t| ... |]@
-    | DeclBracket l [Decl id l]      -- ^ declaration bracket: @[d| ... |]@
+data GBracket id l
+    = ExpBracket l (GExp id l)        -- ^ expression bracket: @[| ... |]@
+    | PatBracket l (GPat id l)        -- ^ pattern bracket: @[p| ... |]@
+    | TypeBracket l (GType id l)      -- ^ type bracket: @[t| ... |]@
+    | DeclBracket l [GDecl id l]      -- ^ declaration bracket: @[d| ... |]@
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A template haskell splice expression
-data Splice id l
+data GSplice id l
     = IdSplice l String           -- ^ variable splice: @$var@
-    | ParenSplice l (Exp id l)       -- ^ parenthesised expression splice: @$(/exp/)@
+    | ParenSplice l (GExp id l)       -- ^ parenthesised expression splice: @$(/exp/)@
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The safety of a foreign function call.
-data Safety l
+data GSafety l
     = PlayRisky l         -- ^ unsafe
     | PlaySafe l Bool     -- ^ safe ('False') or threadsafe ('True')
     | PlayInterruptible l -- ^ interruptible
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The calling convention of a foreign function call.
-data CallConv l
+data GCallConv l
     = StdCall l
     | CCall l
     | CPlusPlus l
@@ -616,11 +555,11 @@ data CallConv l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top level options pragma, preceding the module header.
-data ModulePragma id l
-    = LanguagePragma   l [Name id l]  -- ^ LANGUAGE pragma
+data GModulePragma id l
+    = LanguagePragma   l [GName id l]  -- ^ LANGUAGE pragma
     | OptionsPragma    l (Maybe Tool) String
                         -- ^ OPTIONS pragma, possibly qualified with a tool, e.g. OPTIONS_GHC
-    | AnnModulePragma  l (Annotation id l)
+    | AnnModulePragma  l (GAnnotation id l)
                         -- ^ ANN pragma with module scope
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -629,66 +568,66 @@ data Tool = GHC | HUGS | NHC98 | YHC | HADDOCK | UnknownTool String
   deriving (Eq,Ord,Show,Typeable,Data)
 
 -- | Activation clause of a RULES pragma.
-data Activation l
+data GActivation l
     = ActiveFrom   l Int
     | ActiveUntil  l Int
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The body of a RULES pragma.
-data Rule id l
-    = Rule l String (Maybe (Activation l)) (Maybe [RuleVar id l]) (Exp id l) (Exp id l)
+data GRule id l
+    = Rule l String (Maybe (GActivation l)) (Maybe [GRuleVar id l]) (GExp id l) (GExp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Variables used in a RULES pragma, optionally annotated with types
-data RuleVar id l
-    = RuleVar l (Name id l)
-    | TypedRuleVar l (Name id l) (Type id l)
+data GRuleVar id l
+    = RuleVar l (GName id l)
+    | TypedRuleVar l (GName id l) (GType id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Warning text to optionally use in the module header of e.g.
 --   a deprecated module.
-data WarningText l
+data GWarningText l
     = DeprText l String
     | WarnText l String
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A pattern, to be matched against a value.
-data Pat id l
-    = PVar l (Name id l)                       -- ^ variable
-    | PLit l (Literal l)                    -- ^ literal constant
-    | PNeg l (Pat id l)                        -- ^ negated pattern
-    | PNPlusK l (Name id l) Integer            -- ^ n+k pattern
-    | PInfixApp l (Pat id l) (QName id l) (Pat id l) -- ^ pattern with an infix data constructor
-    | PApp l (QName id l) [Pat id l]              -- ^ data constructor and argument patterns
-    | PTuple l Boxed [Pat id l]                -- ^ tuple pattern
-    | PList l [Pat id l]                       -- ^ list pattern
-    | PParen l (Pat id l)                      -- ^ parenthesized pattern
-    | PRec l (QName id l) [PatField id l]         -- ^ labelled pattern, record style
-    | PAsPat l (Name id l) (Pat id l)             -- ^ @\@@-pattern
+data GPat id l
+    = PVar l (GName id l)                       -- ^ variable
+    | PLit l (GLiteral l)                    -- ^ literal constant
+    | PNeg l (GPat id l)                        -- ^ negated pattern
+    | PNPlusK l (GName id l) Integer            -- ^ n+k pattern
+    | PInfixApp l (GPat id l) (GQName id l) (GPat id l) -- ^ pattern with an infix data constructor
+    | PApp l (GQName id l) [GPat id l]              -- ^ data constructor and argument patterns
+    | PTuple l Boxed [GPat id l]                -- ^ tuple pattern
+    | PList l [GPat id l]                       -- ^ list pattern
+    | PParen l (GPat id l)                      -- ^ parenthesized pattern
+    | PRec l (GQName id l) [GPatField id l]         -- ^ labelled pattern, record style
+    | PAsPat l (GName id l) (GPat id l)             -- ^ @\@@-pattern
     | PWildCard l                           -- ^ wildcard pattern: @_@
-    | PIrrPat l (Pat id l)                     -- ^ irrefutable pattern: @~/pat/@
-    | PatTypeSig l (Pat id l) (Type id l)         -- ^ pattern with type signature
-    | PViewPat l (Exp id l) (Pat id l)            -- ^ view patterns of the form @(/exp/ -> /pat/)@
-    | PRPat l [RPat id l]                      -- ^ regular list pattern
-    | PXTag l (XName id l) [PXAttr id l] (Maybe (Pat id l)) [Pat id l]
+    | PIrrPat l (GPat id l)                     -- ^ irrefutable pattern: @~/pat/@
+    | PatTypeSig l (GPat id l) (GType id l)         -- ^ pattern with type signature
+    | PViewPat l (GExp id l) (GPat id l)            -- ^ view patterns of the form @(/exp/ -> /pat/)@
+    | PRPat l [GRPat id l]                      -- ^ regular list pattern
+    | PXTag l (GXName id l) [GPXAttr id l] (Maybe (GPat id l)) [GPat id l]
                                             -- ^ XML element pattern
-    | PXETag l (XName id l) [PXAttr id l] (Maybe (Pat id l))
+    | PXETag l (GXName id l) [GPXAttr id l] (Maybe (GPat id l))
                                             -- ^ XML singleton element pattern
     | PXPcdata l String                     -- ^ XML PCDATA pattern
-    | PXPatTag l (Pat id l)                    -- ^ XML embedded pattern
-    | PXRPats  l [RPat id l]                   -- ^ XML regular list pattern
-    | PExplTypeArg l (QName id l) (Type id l)     -- ^ Explicit generics style type argument e.g. @f {| Int |} x = ...@
+    | PXPatTag l (GPat id l)                    -- ^ XML embedded pattern
+    | PXRPats  l [GRPat id l]                   -- ^ XML regular list pattern
+    | PExplTypeArg l (GQName id l) (GType id l)     -- ^ Explicit generics style type argument e.g. @f {| Int |} x = ...@
     | PQuasiQuote l String String           -- ^ quasi quote pattern: @[$/name/| /string/ |]@
-    | PBangPat l (Pat id l)                    -- ^ strict (bang) pattern: @f !x = ...@
+    | PBangPat l (GPat id l)                    -- ^ strict (bang) pattern: @f !x = ...@
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An XML attribute in a pattern.
-data PXAttr id l = PXAttr l (XName id l) (Pat id l)
+data GPXAttr id l = PXAttr l (GXName id l) (GPat id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A regular pattern operator.
-data RPatOp l
+data GRPatOp l
     = RPStar  l  -- ^ @*@ = 0 or more
     | RPStarG l  -- ^ @*!@ = 0 or more, greedy
     | RPPlus  l  -- ^ @+@ = 1 or more
@@ -698,112 +637,112 @@ data RPatOp l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An entity in a regular pattern.
-data RPat id l
-    = RPOp l (RPat id l) (RPatOp l)   -- ^ operator pattern, e.g. pat*
-    | RPEither l (RPat id l) (RPat id l) -- ^ choice pattern, e.g. (1 | 2)
-    | RPSeq l [RPat id l]             -- ^ sequence pattern, e.g. (| 1, 2, 3 |)
-    | RPGuard l (Pat id l) [Stmt id l]   -- ^ guarded pattern, e.g. (| p | p < 3 |)
-    | RPCAs l (Name id l) (RPat id l)    -- ^ non-linear variable binding, e.g. (foo\@:(1 | 2))*
-    | RPAs l (Name id l) (RPat id l)     -- ^ linear variable binding, e.g. foo\@(1 | 2)
-    | RPParen l (RPat id l)           -- ^ parenthesised pattern, e.g. (2*)
-    | RPPat l (Pat id l)              -- ^ an ordinary pattern
+data GRPat id l
+    = RPOp l (GRPat id l) (GRPatOp l)   -- ^ operator pattern, e.g. pat*
+    | RPEither l (GRPat id l) (GRPat id l) -- ^ choice pattern, e.g. (1 | 2)
+    | RPSeq l [GRPat id l]             -- ^ sequence pattern, e.g. (| 1, 2, 3 |)
+    | RPGuard l (GPat id l) [GStmt id l]   -- ^ guarded pattern, e.g. (| p | p < 3 |)
+    | RPCAs l (GName id l) (GRPat id l)    -- ^ non-linear variable binding, e.g. (foo\@:(1 | 2))*
+    | RPAs l (GName id l) (GRPat id l)     -- ^ linear variable binding, e.g. foo\@(1 | 2)
+    | RPParen l (GRPat id l)           -- ^ parenthesised pattern, e.g. (2*)
+    | RPPat l (GPat id l)              -- ^ an ordinary pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An /fpat/ in a labeled record pattern.
-data PatField id l
-    = PFieldPat l (QName id l) (Pat id l)     -- ^ ordinary label-pattern pair
-    | PFieldPun l (Name id l)              -- ^ record field pun
+data GPatField id l
+    = PFieldPat l (GQName id l) (GPat id l)     -- ^ ordinary label-pattern pair
+    | PFieldPun l (GName id l)              -- ^ record field pun
     | PFieldWildcard l                  -- ^ record field wildcard
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A statement, representing both a /stmt/ in a @do@-expression,
 --   an ordinary /qual/ in a list comprehension, as well as a /stmt/
 --   in a pattern guard.
-data Stmt id l
-    = Generator l (Pat id l) (Exp id l)
+data GStmt id l
+    = Generator l (GPat id l) (GExp id l)
                             -- ^ a generator: /pat/ @<-@ /exp/
-    | Qualifier l (Exp id l)   -- ^ an /exp/ by itself: in a @do@-expression,
+    | Qualifier l (GExp id l)   -- ^ an /exp/ by itself: in a @do@-expression,
                             --   an action whose result is discarded;
                             --   in a list comprehension and pattern guard,
                             --   a guard expression
-    | LetStmt l (Binds id l)   -- ^ local bindings
-    | RecStmt l [Stmt id l]    -- ^ a recursive binding group for arrows
+    | LetStmt l (GBinds id l)   -- ^ local bindings
+    | RecStmt l [GStmt id l]    -- ^ a recursive binding group for arrows
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A general /transqual/ in a list comprehension,
 --   which could potentially be a transform of the kind
 --   enabled by TransformListComp.
-data QualStmt id l
-    = QualStmt     l (Stmt id l)         -- ^ an ordinary statement
-    | ThenTrans    l (Exp id l)          -- ^ @then@ /exp/
-    | ThenBy       l (Exp id l) (Exp id l)  -- ^ @then@ /exp/ @by@ /exp/
-    | GroupBy      l (Exp id l)          -- ^ @then@ @group@ @by@ /exp/
-    | GroupUsing   l (Exp id l)          -- ^ @then@ @group@ @using@ /exp/
-    | GroupByUsing l (Exp id l) (Exp id l)  -- ^ @then@ @group@ @by@ /exp/ @using@ /exp/
+data GQualStmt id l
+    = QualStmt     l (GStmt id l)         -- ^ an ordinary statement
+    | ThenTrans    l (GExp id l)          -- ^ @then@ /exp/
+    | ThenBy       l (GExp id l) (GExp id l)  -- ^ @then@ /exp/ @by@ /exp/
+    | GroupBy      l (GExp id l)          -- ^ @then@ @group@ @by@ /exp/
+    | GroupUsing   l (GExp id l)          -- ^ @then@ @group@ @using@ /exp/
+    | GroupByUsing l (GExp id l) (GExp id l)  -- ^ @then@ @group@ @by@ /exp/ @using@ /exp/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An /fbind/ in a labeled construction or update expression.
-data FieldUpdate id l
-    = FieldUpdate l (QName id l) (Exp id l)    -- ^ ordinary label-expresion pair
-    | FieldPun l (Name id l)                -- ^ record field pun
+data GFieldUpdate id l
+    = FieldUpdate l (GQName id l) (GExp id l)    -- ^ ordinary label-expresion pair
+    | FieldPun l (GName id l)                -- ^ record field pun
     | FieldWildcard l                    -- ^ record field wildcard
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An /alt/ alternative in a @case@ expression.
-data Alt id l
-    = Alt l (Pat id l) (GuardedAlts id l) (Maybe (Binds id l))
+data GAlt id l
+    = Alt l (GPat id l) (GGuardedAlts id l) (Maybe (GBinds id l))
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The right-hand sides of a @case@ alternative,
 --   which may be a single right-hand side or a
 --   set of guarded ones.
-data GuardedAlts id l
-    = UnGuardedAlt l (Exp id l)         -- ^ @->@ /exp/
-    | GuardedAlts  l [GuardedAlt id l]  -- ^ /gdpat/
+data GGuardedAlts id l
+    = UnGuardedAlt l (GExp id l)         -- ^ @->@ /exp/
+    | GuardedAlts  l [GGuardedAlt id l]  -- ^ /gdpat/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A guarded case alternative @|@ /stmts/ @->@ /exp/.
-data GuardedAlt id l
-    = GuardedAlt l [Stmt id l] (Exp id l)
+data GGuardedAlt id l
+    = GuardedAlt l [GStmt id l] (GExp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 ---- | An alternative in a multiway @if@ expression.
 --data IfAlt id l
---    = IfAlt l (Exp id l) (Exp id l)
+--    = IfAlt l (GExp id l) (GExp id l)
 --  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -----------------------------------------------------------------------------
 -- Builtin names.
 
-prelude_mod, main_mod :: l -> ModuleName String l
+prelude_mod, main_mod :: l -> GModuleName String l
 prelude_mod l = ModuleName l "Prelude"
 main_mod    l = ModuleName l "Main"
 
-main_name :: l -> Name String l
+main_name :: l -> GName String l
 main_name l = Ident l "main"
 
-unit_con_name :: l -> QName id l
+unit_con_name :: l -> GQName id l
 unit_con_name l = Special l (UnitCon l)
 
-tuple_con_name :: l -> Boxed -> Int -> QName id l
+tuple_con_name :: l -> Boxed -> Int -> GQName id l
 tuple_con_name l b i = Special l (TupleCon l b (i+1))
 
-list_cons_name :: l -> QName id l
+list_cons_name :: l -> GQName id l
 list_cons_name l = Special l (Cons l)
 
-unboxed_singleton_con_name :: l -> QName id l
+unboxed_singleton_con_name :: l -> GQName id l
 unboxed_singleton_con_name l = Special l (UnboxedSingleCon l)
 
-unit_con :: l -> Exp id l
+unit_con :: l -> GExp id l
 unit_con l = Con l $ unit_con_name l
 
-tuple_con :: l -> Boxed -> Int -> Exp id l
+tuple_con :: l -> Boxed -> Int -> GExp id l
 tuple_con l b i = Con l (tuple_con_name l b i)
 
-unboxed_singleton_con :: l -> Exp id l
+unboxed_singleton_con :: l -> GExp id l
 unboxed_singleton_con l = Con l (unboxed_singleton_con_name l)
 
-as_name, qualified_name, hiding_name, minus_name, bang_name, dot_name, star_name :: l -> Name String l
+as_name, qualified_name, hiding_name, minus_name, bang_name, dot_name, star_name :: l -> GName String l
 as_name        l = Ident  l "as"
 qualified_name l = Ident  l "qualified"
 hiding_name    l = Ident  l "hiding"
@@ -814,7 +753,7 @@ star_name      l = Symbol l "*"
 
 export_name, safe_name, unsafe_name, threadsafe_name,
   stdcall_name, ccall_name, cplusplus_name, dotnet_name,
-  jvm_name, js_name, forall_name, family_name :: l -> Name String l
+  jvm_name, js_name, forall_name, family_name :: l -> GName String l
 export_name     l = Ident l "export"
 safe_name       l = Ident l "safe"
 unsafe_name     l = Ident l "unsafe"
@@ -828,22 +767,22 @@ js_name         l = Ident l "js"
 forall_name     l = Ident l "forall"
 family_name     l = Ident l "family"
 
-unit_tycon_name, fun_tycon_name, list_tycon_name, unboxed_singleton_tycon_name :: l -> QName String l
+unit_tycon_name, fun_tycon_name, list_tycon_name, unboxed_singleton_tycon_name :: l -> GQName id l
 unit_tycon_name l = unit_con_name l
 fun_tycon_name  l = Special l (FunCon l)
 list_tycon_name l = Special l (ListCon l)
 unboxed_singleton_tycon_name l = Special l (UnboxedSingleCon l)
 
-tuple_tycon_name :: l -> Boxed -> Int -> QName id l
+tuple_tycon_name :: l -> Boxed -> Int -> GQName id l
 tuple_tycon_name l b i = tuple_con_name l b i
 
-unit_tycon, fun_tycon, list_tycon, unboxed_singleton_tycon :: l -> Type String l
+unit_tycon, fun_tycon, list_tycon, unboxed_singleton_tycon :: l -> GType id l
 unit_tycon l = TyCon l $ unit_tycon_name l
 fun_tycon  l = TyCon l $ fun_tycon_name  l
 list_tycon l = TyCon l $ list_tycon_name l
 unboxed_singleton_tycon l = TyCon l $ unboxed_singleton_tycon_name l
 
-tuple_tycon :: l -> Boxed -> Int -> Type String l
+tuple_tycon :: l -> Boxed -> Int -> GType id l
 tuple_tycon l b i = TyCon l (tuple_tycon_name l b i)
 
 -----------------------------------------------------------------------------
@@ -865,11 +804,11 @@ class Functor ast => Annotated ast where
     --   if all nodes in the AST tree are to be affected, use 'fmap'.
     amap :: (l -> l) -> ast l -> ast l
 
-instance Annotated (ModuleName id) where
+instance Annotated (GModuleName id) where
     ann (ModuleName l _) = l
     amap f (ModuleName l n) = ModuleName (f l) n
 
-instance Annotated SpecialCon where
+instance Annotated GSpecialCon where
     ann sc = case sc of
         UnitCon l   -> l
         ListCon l   -> l
@@ -879,7 +818,7 @@ instance Annotated SpecialCon where
         UnboxedSingleCon l  -> l
     amap = fmap
 
-instance Annotated (QName id) where
+instance Annotated (GQName id) where
     ann qn = case qn of
         Qual    l mn n  -> l
         UnQual  l    n  -> l
@@ -889,35 +828,35 @@ instance Annotated (QName id) where
         UnQual  l    n  -> UnQual  (f l)    n
         Special l sc    -> Special (f l) sc
 
-instance Annotated (Name id) where
+instance Annotated (GName id) where
     ann (Ident  l s) = l
     ann (Symbol l s) = l
     amap = fmap
 
-instance Annotated (IPName id) where
+instance Annotated (GIPName id) where
     ann (IPDup l s) = l
     ann (IPLin l s) = l
     amap = fmap
 
-instance Annotated (QOp id) where
+instance Annotated (GQOp id) where
     ann (QVarOp l qn) = l
     ann (QConOp l qn) = l
     amap f (QVarOp l qn) = QVarOp (f l) qn
     amap f (QConOp l qn) = QConOp (f l) qn
 
-instance Annotated (Op id) where
+instance Annotated (GOp id) where
     ann (VarOp l n) = l
     ann (ConOp l n) = l
     amap f (VarOp l n) = VarOp (f l) n
     amap f (ConOp l n) = ConOp (f l) n
 
-instance Annotated (CName id) where
+instance Annotated (GCName id) where
     ann (VarName l n) = l
     ann (ConName l n) = l
     amap f (VarName l n) = VarName (f l) n
     amap f (ConName l n) = ConName (f l) n
 
-instance Annotated (Module id) where
+instance Annotated (GModule id) where
     ann (Module l mmh ops iss dcls) = l
     ann (XmlPage l mn os xn xas me es) = l
     ann (XmlHybrid l mmh ops iss dcls xn xas me es) = l
@@ -929,15 +868,15 @@ instance Annotated (Module id) where
     amap f (XmlHybrid l mmh ops iss dcls xn xas me es) =
         XmlHybrid (f l) mmh ops iss dcls xn xas me es
 
-instance Annotated (ModuleHead id) where
+instance Annotated (GModuleHead id) where
     ann (ModuleHead l n mwt mesl) = l
     amap f (ModuleHead l n mwt mesl) = ModuleHead (f l) n mwt mesl
 
-instance Annotated (ExportSpecList id) where
+instance Annotated (GExportSpecList id) where
     ann (ExportSpecList l ess) = l
     amap f (ExportSpecList l ess) = ExportSpecList (f l) ess
 
-instance Annotated (ExportSpec id) where
+instance Annotated (GExportSpec id) where
     ann es = case es of
         EVar l qn       -> l
         EAbs l qn       -> l
@@ -951,16 +890,16 @@ instance Annotated (ExportSpec id) where
         EThingWith l qn cns -> EThingWith (f l) qn cns
         EModuleContents l mn    -> EModuleContents (f l) mn
 
-instance Annotated (ImportDecl id) where
+instance Annotated (GImportDecl id) where
     ann (ImportDecl l mn qual src pkg mmn mis) = l
     amap f (ImportDecl l mn qual src pkg mmn mis) =
         ImportDecl (f l) mn qual src pkg mmn mis
 
-instance Annotated (ImportSpecList id) where
+instance Annotated (GImportSpecList id) where
     ann (ImportSpecList l b iss) = l
     amap f (ImportSpecList l b iss) = ImportSpecList (f l) b iss
 
-instance Annotated (ImportSpec id) where
+instance Annotated (GImportSpec id) where
     ann is = case is of
         IVar l n        -> l
         IAbs l n        -> l
@@ -974,17 +913,17 @@ instance Annotated (ImportSpec id) where
         IThingWith l n cns  -> IThingWith (f l) n cns
         -- IType  l m      -> IType (f l) m
 
-instance Annotated Assoc where
+instance Annotated GAssoc where
     ann (AssocNone  l) = l
     ann (AssocLeft  l) = l
     ann (AssocRight l) = l
     amap = fmap
 
-instance Annotated (Deriving id) where
+instance Annotated (GDeriving id) where
     ann (Deriving l ihs)    = l
     amap f (Deriving l ihs) = Deriving (f l) ihs
 
-instance Annotated (Decl id) where
+instance Annotated (GDecl id) where
     ann decl = case decl of
         TypeDecl     l dh t         -> l
         TypeFamDecl  l dh mk        -> l
@@ -1046,7 +985,7 @@ instance Annotated (Decl id) where
         InstSig          l mcx ih        -> InstSig (f l) mcx ih
         AnnPragma        l ann           -> AnnPragma (f l) ann
 
-instance Annotated (Annotation id) where
+instance Annotated (GAnnotation id) where
     ann (Ann     l n e) = l
     ann (TypeAnn l n e) = l
     ann (ModuleAnn l e) = l
@@ -1054,12 +993,12 @@ instance Annotated (Annotation id) where
     amap f (TypeAnn l n e) = TypeAnn (f l) n e
     amap f (ModuleAnn l e) = ModuleAnn (f l) e
 
-instance Annotated DataOrNew where
+instance Annotated GDataOrNew where
     ann (DataType l) = l
     ann (NewType  l) = l
     amap = fmap
 
-instance Annotated (DeclHead id) where
+instance Annotated (GDeclHead id) where
     ann (DHead l n tvs)       = l
     ann (DHInfix l tva n tvb) = l
     ann (DHParen l dh)        = l
@@ -1067,7 +1006,7 @@ instance Annotated (DeclHead id) where
     amap f (DHInfix l tva n tvb) = DHInfix (f l) tva n tvb
     amap f (DHParen l dh)        = DHParen (f l) dh
 
-instance Annotated (InstHead id) where
+instance Annotated (GInstHead id) where
     ann (IHead l qn ts) = l
     ann (IHInfix l ta qn tb) = l
     ann (IHParen l ih) = l
@@ -1075,27 +1014,27 @@ instance Annotated (InstHead id) where
     amap f (IHInfix l ta qn tb)  = IHInfix (f l) ta qn tb
     amap f (IHParen l ih)        = IHParen (f l) ih
 
-instance Annotated (Binds id) where
+instance Annotated (GBinds id) where
     ann (BDecls  l decls) = l
     ann (IPBinds l ibs)   = l
     amap f (BDecls  l decls) = BDecls (f l) decls
     amap f (IPBinds l ibs)   = IPBinds (f l) ibs
 
-instance Annotated (IPBind id) where
+instance Annotated (GIPBind id) where
     ann (IPBind l ipn e) = l
     amap f (IPBind l ipn e) = IPBind (f l) ipn e
 
-instance Annotated (Match id) where
+instance Annotated (GMatch id) where
     ann (Match l n ps rhs bs) = l
     ann (InfixMatch l a n b rhs bs) = l
     amap f (Match l n ps rhs bs) = Match (f l) n ps rhs bs
     amap f (InfixMatch l a n b rhs bs) = InfixMatch (f l) a n b rhs bs
 
-instance Annotated (QualConDecl id) where
+instance Annotated (GQualConDecl id) where
     ann (QualConDecl l tvs cx cd) = l
     amap f (QualConDecl l tvs cx cd) = QualConDecl (f l) tvs cx cd
 
-instance Annotated (ConDecl id) where
+instance Annotated (GConDecl id) where
     ann (ConDecl l n bts) = l
     ann (InfixConDecl l ta n tb) = l
     ann (RecDecl l n nsbts) = l
@@ -1103,15 +1042,15 @@ instance Annotated (ConDecl id) where
     amap f (InfixConDecl l ta n tb) = InfixConDecl (f l) ta n tb
     amap f (RecDecl l n fds) = RecDecl (f l) n fds
 
-instance Annotated (FieldDecl id) where
+instance Annotated (GFieldDecl id) where
     ann (FieldDecl l ns t) = l
     amap f (FieldDecl l ns t) = FieldDecl (f l) ns t
 
-instance Annotated (GadtDecl id) where
+instance Annotated (GGadtDecl id) where
     ann (GadtDecl l n t) = l
     amap f (GadtDecl l n t) = GadtDecl (f l) n t
 
-instance Annotated (ClassDecl id) where
+instance Annotated (GClassDecl id) where
     ann (ClsDecl    l d) = l
     ann (ClsDataFam l cx dh mk) = l
     ann (ClsTyFam   l    dh mk) = l
@@ -1121,7 +1060,7 @@ instance Annotated (ClassDecl id) where
     amap f (ClsTyFam   l     dh mk) = ClsTyFam   (f l)     dh mk
     amap f (ClsTyDef   l t1 t2) = ClsTyDef (f l) t1 t2
 
-instance Annotated (InstDecl id) where
+instance Annotated (GInstDecl id) where
     ann id = case id of
         InsDecl   l d           -> l
         InsType   l t1 t2       -> l
@@ -1135,7 +1074,7 @@ instance Annotated (InstDecl id) where
         InsGData  l dn t mk gds ders -> InsGData (f l) dn t mk gds ders
 --        InsInline l b act qn    -> InsInline (f l) b act qn
 
-instance Annotated (BangType id) where
+instance Annotated (GBangType id) where
      ann (BangedTy   l t) = l
      ann (UnBangedTy l t) = l
      ann (UnpackedTy l t) = l
@@ -1143,17 +1082,17 @@ instance Annotated (BangType id) where
      amap f (UnBangedTy l t) = UnBangedTy (f l) t
      amap f (UnpackedTy l t) = UnpackedTy (f l) t
 
-instance Annotated (Rhs id) where
+instance Annotated (GRhs id) where
      ann (UnGuardedRhs l e) = l
      ann (GuardedRhss  l grhss) = l
      amap f (UnGuardedRhs l e)     = UnGuardedRhs (f l) e
      amap f (GuardedRhss  l grhss) = GuardedRhss  (f l) grhss
 
-instance Annotated (GuardedRhs id) where
+instance Annotated (GGuardedRhs id) where
      ann (GuardedRhs l ss e) = l
      amap f (GuardedRhs l ss e) = GuardedRhs (f l) ss e
 
-instance Annotated (Type id) where
+instance Annotated (GType id) where
     ann t = case t of
       TyForall l mtvs cx t          -> l
       TyFun   l t1 t2               -> l
@@ -1179,13 +1118,13 @@ instance Annotated (Type id) where
       TyKind  l t k                 -> TyKind (f l) t k
 --      TyPromoted l   p              -> TyPromoted (f l)   p
 
-instance Annotated (TyVarBind id) where
+instance Annotated (GTyVarBind id) where
     ann (KindedVar   l n k) = l
     ann (UnkindedVar l n)   = l
     amap f (KindedVar   l n k) = KindedVar   (f l) n k
     amap f (UnkindedVar l n)   = UnkindedVar (f l) n
 
-instance Annotated (Kind id) where
+instance Annotated (GKind id) where
     ann (KindStar l) = l
     ann (KindBang l) = l
     ann (KindFn   l k1 k2) = l
@@ -1203,11 +1142,11 @@ instance Annotated (Kind id) where
     -- amap f (KindTuple l ks) = KindTuple (f l) ks
     -- amap f (KindList  l ks) = KindList  (f l) ks
 
-instance Annotated (FunDep id) where
+instance Annotated (GFunDep id) where
     ann (FunDep l ns1 ns2) = l
     amap f (FunDep l ns1 ns2) = FunDep (f l) ns1 ns2
 
-instance Annotated (Context id) where
+instance Annotated (GContext id) where
     ann (CxSingle l asst ) = l
     ann (CxTuple  l assts) = l
     ann (CxParen  l ctxt )  = l
@@ -1217,7 +1156,7 @@ instance Annotated (Context id) where
     amap f (CxParen  l ctxt ) = CxParen  (f l) ctxt
     amap f (CxEmpty l) = CxEmpty (f l)
 
-instance Annotated (Asst id) where
+instance Annotated (GAsst id) where
     ann asst = case asst of
         ClassA l qn ts      -> l
         InfixA l ta qn tb   -> l
@@ -1229,7 +1168,7 @@ instance Annotated (Asst id) where
         IParam l ipn t      -> IParam (f l) ipn t
         EqualP l t1 t2      -> EqualP (f l) t1 t2
 
-instance Annotated Literal where
+instance Annotated GLiteral where
     ann lit = case lit of
         Char    l c    rw  -> l
         String  l s    rw  -> l
@@ -1243,7 +1182,7 @@ instance Annotated Literal where
         PrimString l s rw  -> l
     amap = fmap
 
-instance Annotated (Exp id) where
+instance Annotated (GExp id) where
     ann e = case e of
         Var l qn        -> l
         IPVar l ipn     -> l
@@ -1352,16 +1291,16 @@ instance Annotated (Exp id) where
         -- LCase l alts -> LCase (f l) alts
 
 
-instance Annotated (XName id) where
+instance Annotated (GXName id) where
     ann (XName l s)  = l
     ann (XDomName l sd sn) = l
     amap = fmap
 
-instance Annotated (XAttr id) where
+instance Annotated (GXAttr id) where
     ann (XAttr l xn e) = l
     amap f (XAttr l xn e) = XAttr (f l) xn e
 
-instance Annotated (Bracket id) where
+instance Annotated (GBracket id) where
     ann (ExpBracket l e) = l
     ann (PatBracket l p) = l
     ann (TypeBracket l t) = l
@@ -1371,19 +1310,19 @@ instance Annotated (Bracket id) where
     amap f (TypeBracket l t) = TypeBracket (f l) t
     amap f (DeclBracket l ds) = DeclBracket (f l) ds
 
-instance Annotated (Splice id) where
+instance Annotated (GSplice id) where
     ann (IdSplice l s) = l
     ann (ParenSplice l e) = l
     amap f (IdSplice l s) = IdSplice (f l) s
     amap f (ParenSplice l e) = ParenSplice (f l) e
 
-instance Annotated Safety where
+instance Annotated GSafety where
     ann (PlayRisky l) = l
     ann (PlaySafe l b) = l
     ann (PlayInterruptible l) = l
     amap = fmap
 
-instance Annotated CallConv where
+instance Annotated GCallConv where
     ann (StdCall l) = l
     ann (CCall l) = l
     ann (CPlusPlus l) = l
@@ -1393,7 +1332,7 @@ instance Annotated CallConv where
     ann (CApi l) = l
     amap = fmap
 
-instance Annotated (ModulePragma id) where
+instance Annotated (GModulePragma id) where
     ann (LanguagePragma   l ns) = l
     ann (OptionsPragma    l mt s) = l
     ann (AnnModulePragma  l a) = l
@@ -1401,27 +1340,27 @@ instance Annotated (ModulePragma id) where
     amap f (AnnModulePragma  l a) = AnnModulePragma (f l) a
     amap f p = fmap f p
 
-instance Annotated Activation where
+instance Annotated GActivation where
     ann (ActiveFrom   l k) = l
     ann (ActiveUntil  l k) = l
     amap = fmap
 
-instance Annotated (Rule id) where
+instance Annotated (GRule id) where
     ann (Rule l s act mrvs e1 e2) = l
     amap f (Rule l s act mrvs e1 e2) = Rule (f l) s act mrvs e1 e2
 
-instance Annotated (RuleVar id) where
+instance Annotated (GRuleVar id) where
     ann (RuleVar l n) = l
     ann (TypedRuleVar l n t) = l
     amap f (RuleVar l n) = RuleVar (f l) n
     amap f (TypedRuleVar l n t) = TypedRuleVar (f l) n t
 
-instance Annotated WarningText where
+instance Annotated GWarningText where
     ann (DeprText l s) = l
     ann (WarnText l s) = l
     amap = fmap
 
-instance Annotated (Pat id) where
+instance Annotated (GPat id) where
     ann p = case p of
       PVar l n          -> l
       PLit l lit        -> l
@@ -1473,11 +1412,11 @@ instance Annotated (Pat id) where
       PQuasiQuote l sn st   -> PQuasiQuote (f l) sn st
       PBangPat l p          -> PBangPat (f l) p
 
-instance Annotated (PXAttr id) where
+instance Annotated (GPXAttr id) where
     ann (PXAttr l xn p) = l
     amap f (PXAttr l xn p) = PXAttr (f l) xn p
 
-instance Annotated RPatOp where
+instance Annotated GRPatOp where
     ann (RPStar  l) = l
     ann (RPStarG l) = l
     ann (RPPlus  l) = l
@@ -1486,7 +1425,7 @@ instance Annotated RPatOp where
     ann (RPOptG  l) = l
     amap = fmap
 
-instance Annotated (RPat id) where
+instance Annotated (GRPat id) where
     ann rp = case rp of
       RPOp l rp rop         -> l
       RPEither l rp1 rp2    -> l
@@ -1506,7 +1445,7 @@ instance Annotated (RPat id) where
       RPParen l rp          -> RPParen (f l) rp
       RPPat l p             -> RPPat (f l) p
 
-instance Annotated (PatField id) where
+instance Annotated (GPatField id) where
     ann (PFieldPat l qn p) = l
     ann (PFieldPun l n) = l
     ann (PFieldWildcard l) = l
@@ -1514,7 +1453,7 @@ instance Annotated (PatField id) where
     amap f (PFieldPun l n) = PFieldPun (f l) n
     amap f (PFieldWildcard l) = PFieldWildcard (f l)
 
-instance Annotated (Stmt id) where
+instance Annotated (GStmt id) where
     ann (Generator l p e) = l
     ann (Qualifier l e)   = l
     ann (LetStmt l bs)    = l
@@ -1524,7 +1463,7 @@ instance Annotated (Stmt id) where
     amap f (LetStmt l bs)    = LetStmt (f l) bs
     amap f (RecStmt l ss)    = RecStmt (f l) ss
 
-instance Annotated (QualStmt id) where
+instance Annotated (GQualStmt id) where
     ann (QualStmt     l s) = l
     ann (ThenTrans    l e) = l
     ann (ThenBy       l e1 e2) = l
@@ -1538,7 +1477,7 @@ instance Annotated (QualStmt id) where
     amap f (GroupUsing   l e) = GroupUsing (f l) e
     amap f (GroupByUsing l e1 e2) = GroupByUsing (f l) e1 e2
 
-instance Annotated (FieldUpdate id) where
+instance Annotated (GFieldUpdate id) where
     ann (FieldUpdate l qn e) = l
     ann (FieldPun l n)       = l
     ann (FieldWildcard l)    = l
@@ -1546,21 +1485,21 @@ instance Annotated (FieldUpdate id) where
     amap f (FieldPun l n)       = FieldPun (f l) n
     amap f (FieldWildcard l)    = FieldWildcard (f l)
 
-instance Annotated (Alt id) where
+instance Annotated (GAlt id) where
     ann (Alt l p gs bs) = l
     amap f (Alt l p gs bs) = Alt (f l) p gs bs
 
-instance Annotated (GuardedAlts id) where
+instance Annotated (GGuardedAlts id) where
     ann (UnGuardedAlt l e) = l
     ann (GuardedAlts  l galts) = l
     amap f (UnGuardedAlt l e) = UnGuardedAlt (f l) e
     amap f (GuardedAlts  l galts) = GuardedAlts (f l) galts
 
-instance Annotated (GuardedAlt id) where
+instance Annotated (GGuardedAlt id) where
     ann (GuardedAlt l ss e) = l
     amap f (GuardedAlt l ss e) = GuardedAlt (f l) ss e
 
---instance Annotated (Promoted id) where
+--instance Annotated (GPromoted id) where
 --    ann (PromotedInteger l int raw) = l
 --    ann (PromotedString l str raw) = l
 --    ann (PromotedCon l b qn)   = l
@@ -1574,6 +1513,6 @@ instance Annotated (GuardedAlt id) where
 --    amap f (PromotedTuple l ps) = PromotedTuple (f l) ps
 --    amap f (PromotedUnit l)     = PromotedUnit (f l)
 
---instance Annotated (IfAlt id) where
+--instance Annotated (GIfAlt id) where
 --    ann (IfAlt l e1 e2) = l
 --    amap f (IfAlt l e1 e2) = IfAlt (f l) e1 e2
