@@ -1,13 +1,27 @@
 module Language.Haskell.Ext.Parser
+  (
+   parseModule
+  ,parseExp
+  ,module Language.Haskell.Exts.SrcLoc
+  )
 
 where
 
 
 import qualified Language.Haskell.Exts.Annotated.Syntax as E
 import qualified Language.Haskell.Exts.Parser as P
-import Language.Haskell.Ext.AST
 
--- parseModule
+import Language.Haskell.Ext.AST
+import Language.Haskell.Exts.SrcLoc
+
+parseModule :: SrcInfo loc => String -> P.ParseResult (Module String loc)
+parseModule = fmap fromHseModule . P.parse
+
+parseExp :: SrcInfo loc => String -> P.ParseResult (Exp String loc)
+parseExp = fmap fromHseExp . P.parse
+
+
+
 
 fromHseModuleName :: E.ModuleName l -> ModuleName String l
 fromHseModuleName (E.ModuleName l s) = ModuleName l s
