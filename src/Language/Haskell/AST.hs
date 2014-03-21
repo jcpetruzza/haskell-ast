@@ -1,67 +1,67 @@
 {-# LANGUAGE CPP, DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, DeriveGeneric #-}
 module Language.Haskell.AST
-  -- (
-  --  -- * Modules
-  --  Module(..), ModuleHead(..), WarningText(..), ExportSpecList(..), ExportSpec(..),
-  --  ImportDecl(..), ImportSpecList(..), ImportSpec(..), Assoc(..),
-  --  -- * Declarations
-  --  Decl(..), DeclHead(..), InstHead(..), Binds(..), IPBind(..),
-  --  -- ** Type classes and instances
-  --  ClassDecl(..), InstDecl(..), Deriving(..),
-  --  -- ** Data type declarations
-  --  DataOrNew(..), ConDecl(..), FieldDecl(..), QualConDecl(..), GadtDecl(..), BangType(..),
-  --  -- ** Function bindings
-  --  Match(..), Rhs(..), GuardedRhs(..),
-  --  -- * Class Assertions and Contexts
-  --  Context(..), FunDep(..), Asst(..),
-  --  -- * Types
-  --  Type(..), Boxed(..), Kind(..), TyVarBind(..), Promoted(..),
-  --  -- * Expressions
-  --  Exp(..), Stmt(..), QualStmt(..), FieldUpdate(..),
-  --  Alt(..), GuardedAlts(..), GuardedAlt(..), XAttr(..), IfAlt(..),
-  --  -- * Patterns
-  --  Pat(..), PatField(..), PXAttr(..), RPat(..), RPatOp(..),
-  --  -- * Literals
-  --  Literal(..),
-  --  -- * Variables, Constructors and Operators
-  --  ModuleName(..), QName(..), Name(..), QOp(..), Op(..),
-  --  SpecialCon(..), CName(..), IPName(..), XName(..),
+   (
+    -- * Modules
+    Module(..), ModuleHead(..), WarningText(..), ExportSpecList(..), ExportSpec(..),
+    ImportDecl(..), ImportSpecList(..), ImportSpec(..), Assoc(..),
+    -- * Declarations
+    Decl(..), DeclHead(..), InstHead(..), Binds(..), IPBind(..),
+    -- ** Type classes and instances
+    ClassDecl(..), InstDecl(..), Deriving(..),
+    -- ** Data type declarations
+    DataOrNew(..), ConDecl(..), FieldDecl(..), QualConDecl(..), GadtDecl(..), BangType(..),
+    -- ** Function bindings
+    Match(..), Rhs(..), GuardedRhs(..),
+    -- * Class Assertions and Contexts
+    Context(..), FunDep(..), Asst(..),
+    -- * Types
+    Type(..), Boxed(..), Kind(..), TyVarBind(..), Promoted(..),
+    -- * Expressions
+    Exp(..), Stmt(..), QualStmt(..), FieldUpdate(..),
+    Alt(..), GuardedAlts(..), GuardedAlt(..), XAttr(..), IfAlt(..),
+    -- * Patterns
+    Pat(..), PatField(..), PXAttr(..), RPat(..), RPatOp(..),
+    -- * Literals
+    Literal(..),
+    -- * Variables, Constructors and Operators
+    ModuleName(..), QName(..), Name(..), QOp(..), Op(..),
+    SpecialCon(..), CName(..), IPName(..), XName(..),
 
-  --  -- * Template Haskell
-  --  Bracket(..), Splice(..),
+    -- * Template Haskell
+    Bracket(..), Splice(..),
 
-  --  -- * FFI
-  --  Safety(..), CallConv(..),
+    -- * FFI
+    Safety(..), CallConv(..),
 
-  --  -- * Pragmas
-  --  ModulePragma(..), Tool(..),
-  --  Rule(..), RuleVar(..), Activation(..),
-  --  Annotation(..),
+    -- * Pragmas
+    ModulePragma(..), Tool(..),
+    Rule(..), RuleVar(..), Activation(..),
+    Annotation(..),
 
-  --  -- * Builtin names
+    -- * Builtin names
 
-  --  -- ** Modules
-  --  prelude_mod, main_mod,
-  --  -- ** Main function of a program
-  --  main_name,
-  --  -- ** Constructors
-  --  unit_con_name, tuple_con_name, list_cons_name, unboxed_singleton_con_name,
-  --  unit_con, tuple_con, unboxed_singleton_con,
-  --  -- ** Special identifiers
-  --  as_name, qualified_name, hiding_name, minus_name, bang_name, dot_name, star_name,
-  --  export_name, safe_name, unsafe_name, threadsafe_name,
-  --  stdcall_name, ccall_name, cplusplus_name, dotnet_name, jvm_name, js_name,
-  --  forall_name, family_name,
-  --  -- ** Type constructors
-  --  unit_tycon_name, fun_tycon_name, list_tycon_name, tuple_tycon_name, unboxed_singleton_tycon_name,
-  --  unit_tycon, fun_tycon, list_tycon, tuple_tycon, unboxed_singleton_tycon,
+    -- ** Modules
+    prelude_mod, main_mod,
+    -- ** Main function of a program
+    main_name,
+    -- ** Constructors
+    unit_con_name, tuple_con_name, list_cons_name, unboxed_singleton_con_name,
+    unit_con, tuple_con, unboxed_singleton_con,
+    -- ** Special identifiers
+    as_name, qualified_name, hiding_name, minus_name, bang_name, dot_name, star_name,
+    export_name, safe_name, unsafe_name, threadsafe_name,
+    stdcall_name, ccall_name, cplusplus_name, dotnet_name, jvm_name, js_name,
+    forall_name, family_name,
+    -- ** Type constructors
+    unit_tycon_name, fun_tycon_name, list_tycon_name, tuple_tycon_name, unboxed_singleton_tycon_name,
+    unit_tycon, fun_tycon, list_tycon, tuple_tycon, unboxed_singleton_tycon,
 
-  --  -- * Source coordinates
-  --  -- SrcLoc(..),
+    -- * Source coordinates
+    -- SrcLoc(..),
 
-  --  -- * Annotated trees
-  --  Annotated(..), (=~=),
---  )
+    -- * Annotated trees
+    Annotated(..), (=~=),
+  )
  where
 
 
