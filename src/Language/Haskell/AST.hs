@@ -54,8 +54,8 @@ data GCName id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A complete Haskell source module.
-data GModule exp pat lit id l
-    = Module l (Maybe (GModuleHead id l)) [GModulePragma id l] [GImportDecl id l] [GDecl exp pat lit id l]
+data GModule guard exp pat lit id l
+    = Module l (Maybe (GModuleHead id l)) [GModulePragma id l] [GImportDecl id l] [GDecl guard exp pat lit id l]
     -- ^ an ordinary Haskell module
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -142,7 +142,7 @@ data GAssoc l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top-level declaration.
-data GDecl exp pat lit id l
+data GDecl guard exp pat lit id l
      = TypeDecl     l (GDeclHead id l) (GType id l)
      -- ^ A type declaration
      | TypeFamDecl  l (GDeclHead id l) (Maybe (GKind id l))
@@ -159,9 +159,9 @@ data GDecl exp pat lit id l
      -- ^ A data family instance declaration
      | GDataInsDecl l (GDataOrNew l) (GType id l) (Maybe (GKind id l)) [GGadtDecl id l]    (Maybe (GDeriving id l))
      -- ^ A data family instance declaration, GADT style
-     | ClassDecl    l (Maybe (GContext id l)) (GDeclHead id l) [GFunDep id l] (Maybe [GClassDecl exp pat lit id l])
+     | ClassDecl    l (Maybe (GContext id l)) (GDeclHead id l) [GFunDep id l] (Maybe [GClassDecl guard exp pat lit id l])
      -- ^ A declaration of a type class
-     | InstDecl     l (Maybe (GContext id l)) (GInstHead id l) (Maybe [GInstDecl exp pat lit id l])
+     | InstDecl     l (Maybe (GContext id l)) (GInstHead id l) (Maybe [GInstDecl guard exp pat lit id l])
      -- ^ An declaration of a type class instance
      | DerivDecl    l (Maybe (GContext id l)) (GInstHead id l)
      -- ^ A standalone deriving declaration
@@ -171,9 +171,9 @@ data GDecl exp pat lit id l
      -- ^ A declaration of default types
      | TypeSig      l [GName id l] (GType id l)
      -- ^ A type signature declaration
-     | FunBind      l [GMatch exp pat lit id l]
+     | FunBind      l [GMatch guard exp pat lit id l]
      -- ^ A set of function binding clauses
-     | PatBind      l (pat id l) (Maybe (GType id l)) (GRhs exp pat lit id l) {-where-} (Maybe (GBinds exp pat lit id l))
+     | PatBind      l (pat id l) (Maybe (GType id l)) (GRhs guard exp id l) {-where-} (Maybe (GBinds guard exp pat lit id l))
      -- ^ A pattern binding
      | ForImp       l (GCallConv l) (Maybe (GSafety l)) (Maybe String) (GName id l) (GType id l)
      -- ^ A foreign import declaration
@@ -205,17 +205,17 @@ data GDeriving id l = Deriving l [GInstHead id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A binding group inside a @let@ or @where@ clause.
-data GBinds exp pat lit id l
-    = BDecls  l [GDecl exp pat lit id l]     -- ^ An ordinary binding group
+data GBinds guard exp pat lit id l
+    = BDecls  l [GDecl guard exp pat lit id l]     -- ^ An ordinary binding group
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Clauses of a function binding.
-data GMatch exp pat lit id l
-     = Match l      (GName id l) [pat id l]         (GRhs exp pat lit id l) {-where-} (Maybe (GBinds exp pat lit id l))
+data GMatch guard exp pat lit id l
+     = Match l      (GName id l) [pat id l]         (GRhs guard exp id l) {-where-} (Maybe (GBinds guard exp pat lit id l))
         -- ^ A clause defined with prefix notation, i.e. the function name
         --  followed by its argument patterns, the right-hand side and an
         --  optional where clause.
-     | InfixMatch l (pat id l) (GName id l) [pat id l] (GRhs exp pat lit id l) {-where-} (Maybe (GBinds exp pat lit id l))
+     | InfixMatch l (pat id l) (GName id l) [pat id l] (GRhs guard exp id l) {-where-} (Maybe (GBinds guard exp pat lit id l))
         -- ^ A clause defined with infix notation, i.e. first its first argument
         --  pattern, then the function name, then its following argument(s),
         --  the right-hand side and an optional where clause.
@@ -252,8 +252,8 @@ data GGadtDecl id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declarations inside a class declaration.
-data GClassDecl exp pat lit id l
-    = ClsDecl    l (GDecl exp pat lit id l)
+data GClassDecl guard exp pat lit id l
+    = ClsDecl    l (GDecl guard exp pat lit id l)
             -- ^ ordinary declaration
     | ClsDataFam l (Maybe (GContext id l)) (GDeclHead id l) (Maybe (GKind id l))
             -- ^ declaration of an associated data type
@@ -264,8 +264,8 @@ data GClassDecl exp pat lit id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declarations inside an instance declaration.
-data GInstDecl exp pat lit id l
-    = InsDecl   l (GDecl exp pat lit id l)
+data GInstDecl guard exp pat lit id l
+    = InsDecl   l (GDecl guard exp pat lit id l)
             -- ^ ordinary declaration
     | InsType   l (GType id l) (GType id l)
             -- ^ an associated type definition
@@ -284,17 +284,18 @@ data GBangType id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The right hand side of a function or pattern binding.
-data GRhs exp pat lit id l
-     = UnGuardedRhs l exp  -- ^ unguarded right hand side (/exp/)
-     | GuardedRhss  l [GGuardedRhs exp pat lit id l]
-                -- ^ guarded right hand side (/gdrhs/)
+data GRhs guard exp id l
+     = UnGuardedRhs l (exp id l) -- ^ unguarded right hand side (/exp/)
+     | GuardedRhss  l [GGuardedRhs guard exp id l]
+                                 -- ^ guarded right hand side (/gdrhs/)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A guarded right hand side @|@ /stmts/ @=@ /exp/.
 --   The guard is a series of statements when using pattern guards,
 --   otherwise it will be a single qualifier expression.
-data GGuardedRhs exp pat lit id l
-     = GuardedRhs l [GStmt exp pat lit id l] exp
+--  NB. @guard@ can be an expression, for H98, or a list of statements, for H2010
+data GGuardedRhs guard exp id l
+     = GuardedRhs l guard (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A type qualified with a context.
@@ -466,17 +467,6 @@ data GPat patext id l
 
 
 
--- | A statement, representing both a /stmt/ in a @do@-expression,
---   an ordinary /qual/ in a list comprehension, as well as a /stmt/
---   in a pattern guard.
-data GStmt exp pat lit id l
-    = Generator l (pat id l) exp   -- ^ a generator: /pat/ @<-@ /exp/
-    | Qualifier l exp       --   an action whose result is discarded;
-                            --   in a list comprehension and pattern guard,
-                            --   a guard expression
-    | LetStmt l (GBinds exp pat lit id l)   -- ^ local bindings
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
 -----------------------------------------------------------------------------
 -- Builtin names.
 
@@ -607,7 +597,8 @@ instance Annotated (GCName id) where
     ann (ConName l _) = l
     amap = fmap
 
-instance Functor (pat id) => Annotated (GModule exp pat lit id) where
+instance (Functor (exp id), Functor (pat id))
+ => Annotated (GModule guard exp pat lit id) where
     ann (Module l _ _ _ _) = l
     amap = fmap
 
@@ -660,26 +651,27 @@ instance Annotated (GDeriving id) where
     ann (Deriving l _)    = l
     amap = fmap
 
-instance Functor (pat id) => Annotated (GDecl exp pat lit id) where
+instance (Functor (exp id), Functor (pat id))
+ => Annotated (GDecl guard exp pat lit id) where
     ann decl = case decl of
         TypeDecl     l _ _         -> l
-        TypeFamDecl  l _ _        -> l
-        DataDecl     l _ _ _ _ _ -> l
+        TypeFamDecl  l _ _         -> l
+        DataDecl     l _ _ _ _ _   -> l
         GDataDecl    l _ _ _ _ _ _ -> l
-        DataFamDecl  l    _ _ _  -> l
-        TypeInsDecl  l _ _        -> l
-        DataInsDecl  l _ _ _ _    -> l
-        GDataInsDecl l _ _ _ _ _ -> l
-        ClassDecl    l _ _ _ _    -> l
-        InstDecl     l _ _ _        -> l
-        DerivDecl    l _ _            -> l
-        InfixDecl    l _ _ _          -> l
-        DefaultDecl  l _               -> l
-        TypeSig      l _ _             -> l
-        FunBind      l _               -> l
-        PatBind      l _ _ _ _      -> l
-        ForImp       l _ _ _ _ _     -> l
-        ForExp       l _     _ _ _     -> l
+        DataFamDecl  l _ _ _       -> l
+        TypeInsDecl  l _ _         -> l
+        DataInsDecl  l _ _ _ _     -> l
+        GDataInsDecl l _ _ _ _ _   -> l
+        ClassDecl    l _ _ _ _     -> l
+        InstDecl     l _ _ _       -> l
+        DerivDecl    l _ _         -> l
+        InfixDecl    l _ _ _       -> l
+        DefaultDecl  l _           -> l
+        TypeSig      l _ _         -> l
+        FunBind      l _           -> l
+        PatBind      l _ _ _ _     -> l
+        ForImp       l _ _ _ _ _   -> l
+        ForExp       l _ _ _ _     -> l
 
     amap = fmap
 
@@ -700,11 +692,13 @@ instance Annotated (GInstHead id) where
     ann (IHParen l _) = l
     amap = fmap
 
-instance Functor (pat id) => Annotated (GBinds exp pat lit id) where
+instance (Functor (exp id), Functor (pat id))
+ => Annotated (GBinds guard exp pat lit id) where
     ann (BDecls  l _) = l
     amap = fmap
 
-instance Functor (pat id) => Annotated (GMatch exp pat lit id) where
+instance (Functor (exp id), Functor (pat id))
+ => Annotated (GMatch guard exp pat lit id) where
     ann (Match l _ _ _ _) = l
     ann (InfixMatch l _ _ _ _ _) = l
     amap = fmap
@@ -727,14 +721,16 @@ instance Annotated (GGadtDecl id) where
     ann (GadtDecl l _ _) = l
     amap = fmap
 
-instance Functor (pat id) => Annotated (GClassDecl exp pat lit id) where
+instance (Functor (exp id), Functor (pat id))
+ => Annotated (GClassDecl guard exp pat lit id) where
     ann (ClsDecl    l _) = l
     ann (ClsDataFam l _ _ _) = l
     ann (ClsTyFam   l    _ _) = l
     ann (ClsTyDef   l _ _) = l
     amap = fmap
 
-instance Functor (pat id) => Annotated (GInstDecl exp pat lit id) where
+instance (Functor (exp id), Functor (pat id))
+ => Annotated (GInstDecl guard exp pat lit id) where
     ann insd = case insd of
         InsDecl   l _          -> l
         InsType   l _ _        -> l
@@ -748,12 +744,12 @@ instance Annotated (GBangType id) where
      ann (UnpackedTy l _) = l
      amap = fmap
 
-instance Functor (pat id) => Annotated (GRhs exp pat lit id) where
+instance Functor (exp id) => Annotated (GRhs guard exp id) where
      ann (UnGuardedRhs l _) = l
      ann (GuardedRhss  l _) = l
      amap = fmap
 
-instance Functor (pat id) => Annotated (GGuardedRhs exp pat lit id) where
+instance Functor (exp id) => Annotated (GGuardedRhs guard exp id) where
      ann (GuardedRhs l _ _) = l
      amap = fmap
 
@@ -856,12 +852,6 @@ instance Annotated (patext id) => Annotated (GPat patext id) where
       PApp l _ _   -> l
       PWildCard l  -> l
       PExt patext  -> ann patext
-    amap = fmap
-
-instance Functor (pat id) => Annotated (GStmt exp pat lit id) where
-    ann (Generator l _ _) = l
-    ann (Qualifier l _)   = l
-    ann (LetStmt l _)    = l
     amap = fmap
 
 instance (Functor (pat id),Functor (expext id))

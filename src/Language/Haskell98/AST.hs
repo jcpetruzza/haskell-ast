@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, StandaloneDeriving #-}
 module Language.Haskell98.AST
 
 where
@@ -11,8 +11,17 @@ import Language.Haskell.AST as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
 import qualified Language.Haskell.Ext.AST.Patterns as Patterns
 
--- | End of extensions (empty declaration)
-data EOE
+-- | No extensions
+data NoExts id l
+
+deriving instance Eq (NoExts id l)
+deriving instance Ord (NoExts id l)
+deriving instance Show (NoExts id l)
+deriving instance Functor (NoExts id)
+deriving instance Foldable (NoExts id)
+deriving instance Traversable (NoExts id)
+deriving instance Typeable NoExts
+deriving instance (Data id, Data l) => Data (NoExts id l)
 
 -- | This type is used as annotation of @Literals@ in order to
 --   store the exact representation
@@ -41,16 +50,19 @@ newtype ExpExts id l
   = ExpSugar (Sugar.GExp Type QStmt Stmt Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-
--- HACK
-type QStmt = ()
-type Stmt = ()
-type Binds = ()
-type Type = ()
-
 instance Annotated (ExpExts id) where
     ann (ExpSugar exp) = ann exp
     amap = fmap
+
+
+-- | A Haskell 98 statement
+type Stmt = Sugar.GStmt Binds Exp Pat NoExts
+
+-- HACK
+type QStmt = ()
+type Binds = ()
+type Type = ()
+
 
 
 -- | Haskell 98 @let@ or @where@ declarations

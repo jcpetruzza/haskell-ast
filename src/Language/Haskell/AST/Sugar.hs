@@ -37,7 +37,7 @@ data GExp ty qstmt stmt exp id l
      = InfixApp l (exp id l) (GQOp id l) (exp id l)  -- ^ infix application
      | NegApp l (exp id l)                           -- ^ negation expression @-/exp/@ (unary minus)
      | If l (exp id l) (exp id l) (exp id l)         -- ^ @if@ /exp/ @then@ /exp/ @else@ /exp/
-     | Do l [stmt]                                   -- ^ @do@-expression:
+     | Do l [stmt id l]                              -- ^ @do@-expression:
                                                      --   the last statement in the list
                                                      --   should be an expression.
      | Tuple l Boxed [exp id l]                      -- ^ tuple expression
@@ -74,6 +74,19 @@ data GFieldUpdate exp id l
     | FieldWildcard l                        -- ^ record field wildcard
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
+-- | A statement, representing both a /stmt/ in a @do@-expression,
+--   an ordinary /qual/ in a list comprehension, as well as a /stmt/
+--   in a pattern guard.
+data GStmt binds exp pat stmtext id l
+    = Generator l (pat id l) (exp id l)  -- ^ a generator: /pat/ @<-@ /exp/
+    | Qualifier l (exp id l)             --   an action whose result is discarded;
+                                         --   in a list comprehension and pattern guard,
+                                         --   a guard expression
+    | LetStmt l binds                    -- ^ local bindings
+    | StmtExt (stmtext id l)             -- ^ an extended statement
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+
 instance Functor (pat id) => Annotated (GPat lit pat id) where
     ann p = case p of
       PLit l _          -> l
@@ -88,32 +101,33 @@ instance Functor (pat id) => Annotated (GPat lit pat id) where
     amap = fmap
 
 instance Functor (pat id) => Annotated (GPatField pat id) where
-    ann (PFieldPat l _ _) = l
-    ann (PFieldPun l _) = l
+    ann (PFieldPat l _ _)  = l
+    ann (PFieldPun l _)    = l
     ann (PFieldWildcard l) = l
     amap = fmap
 
 
-instance Functor (exp id) => Annotated (GExp ty qstmt stmt exp id) where
+instance (Functor (stmt id), Functor (exp id))
+  => Annotated (GExp ty qstmt stmt exp id) where
     ann e = case e of
-        InfixApp l _ _ _    -> l
-        NegApp l _      -> l
-        If l _ _ _   -> l
-        Do l _         -> l
-        Tuple l _ _   -> l
-        TupleSection l _ _ -> l
-        List l _       -> l
-        Paren l _       -> l
-        LeftSection l _ _     -> l
-        RightSection l _ _    -> l
-        RecConstr l _ _     -> l
-        RecUpdate l _  _     -> l
-        EnumFrom l _            -> l
-        EnumFromTo l _ _      -> l
-        EnumFromThen l _ _    -> l
+        InfixApp l _ _ _       -> l
+        NegApp l _             -> l
+        If l _ _ _             -> l
+        Do l _                 -> l
+        Tuple l _ _            -> l
+        TupleSection l _ _     -> l
+        List l _               -> l
+        Paren l _              -> l
+        LeftSection l _ _      -> l
+        RightSection l _ _     -> l
+        RecConstr l _ _        -> l
+        RecUpdate l _  _       -> l
+        EnumFrom l _           -> l
+        EnumFromTo l _ _       -> l
+        EnumFromThen l _ _     -> l
         EnumFromThenTo l _ _ _ -> l
-        ListComp l _ _        -> l
-        ExpTypeSig l _ _        -> l
+        ListComp l _ _         -> l
+        ExpTypeSig l _ _       -> l
     amap = fmap
 
 instance Annotated (GQOp id) where
@@ -123,7 +137,15 @@ instance Annotated (GQOp id) where
 
 instance Functor (exp id) => Annotated (GFieldUpdate exp id) where
     ann (FieldUpdate l _ _) = l
-    ann (FieldPun l _)       = l
-    ann (FieldWildcard l)    = l
+    ann (FieldPun l _)      = l
+    ann (FieldWildcard l)   = l
+    amap = fmap
+
+instance (Functor (exp id), Functor (pat id), Annotated (stmtext id))
+ => Annotated (GStmt binds exp pat stmtext id) where
+    ann (Generator l _ _) = l
+    ann (Qualifier l _)   = l
+    ann (LetStmt l _)     = l
+    ann (StmtExt e)       = ann e
     amap = fmap
 
