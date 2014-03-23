@@ -393,40 +393,19 @@ data GLiteral l
 
 -- | Haskell expressions.
 data GExp binds pat lit expext id l
-    = Var l (GQName id l)                          -- ^ variable
-    | Con l (GQName id l)                          -- ^ data constructor
-    | Lit l lit                                    -- ^ literal constant
-    | App l (GExp binds pat lit expext id l) (GExp binds pat lit expext id l)
-                                                   -- ^ ordinary application
-    | Lambda l [pat id l] (GExp binds pat lit expext id l)
-                                                   -- ^ lambda expression
-    | Let l binds (GExp binds pat lit expext id l) -- ^ local declarations with @let@ ... @in@ ...
-    | Case l (GExp binds pat lit expext id l) [GAlt binds pat lit expext id l]
-                                                   -- ^ @case@ /exp/ @of@ /alts/
-    | ExpExt (expext id l)                         -- ^ an extended expression
+    = Var l (GQName id l)                       -- ^ variable
+    | Con l (GQName id l)                       -- ^ data constructor
+    | Lit l lit                                 -- ^ literal constant
+    | App l (GExp binds pat lit expext id l)
+            (GExp binds pat lit expext id l)    -- ^ ordinary application
+    | Lambda l [pat id l]
+               (GExp binds pat lit expext id l) -- ^ lambda expression
+    | Let l  binds
+             (GExp binds pat lit expext id l)   -- ^ local declarations with @let@ ... @in@ ...
+    | Case l (GExp binds pat lit expext id l)
+             (GExp binds pat lit expext id l)   -- ^ @case@ /exp/ @of@ /alts/
+    | ExpExt (expext id l)                      -- ^ an extended expression
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
--- | An /alt/ alternative in a @case@ expression.
--- (note that the type parameters are just the same as for @GExp@,
---  this is since they depend on each other only)
-data GAlt binds pat lit expext id l
-    = Alt l (pat id l) (GGuardedAlts binds pat lit expext id l) (Maybe binds)
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
--- | The right-hand sides of a @case@ alternative,
---   which may be a single right-hand side or a
---   set of guarded ones.
-data GGuardedAlts binds pat lit expext id l
-    = UnGuardedAlt l (GExp binds pat lit expext id l)         -- ^ @->@ /exp/
-    | GuardedAlts  l [GGuardedAlt binds pat lit expext id l]  -- ^ /gdpat/
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
--- | A guarded case alternative @|@ /exp/ @->@ /exp/.
--- | NB. This follows the haskell'98 specification (no pattern guards)
-data GGuardedAlt binds pat lit expext id l
-    = GuardedAlt l (GExp binds pat lit expext id l)  (GExp binds pat lit expext id l)
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
 
 -- | The safety of a foreign function call.
 data GSafety l
@@ -813,7 +792,8 @@ instance Annotated GLiteral where
         PrimString l _ -> l
     amap = fmap
 
-instance (Functor (pat id), Annotated (expext id)) => Annotated (GExp binds pat lit expext id) where
+instance (Functor (pat id), Annotated (expext id))
+ => Annotated (GExp binds pat lit expext id) where
     ann e = case e of
         Var l _        -> l
         Con l _        -> l
@@ -852,21 +832,5 @@ instance Annotated (patext id) => Annotated (GPat patext id) where
       PApp l _ _   -> l
       PWildCard l  -> l
       PExt patext  -> ann patext
-    amap = fmap
-
-instance (Functor (pat id),Functor (expext id))
-    => Annotated (GAlt binds pat lit expext id) where
-    ann (Alt l _ _ _) = l
-    amap = fmap
-
-instance (Functor (pat id),Functor (expext id))
-    => Annotated (GGuardedAlts binds pat lit expext id) where
-    ann (UnGuardedAlt l _) = l
-    ann (GuardedAlts  l _) = l
-    amap = fmap
-
-instance (Functor (pat id),Functor (expext id))
-   => Annotated (GGuardedAlt binds pat lit expext id) where
-    ann (GuardedAlt l _ _) = l
     amap = fmap
 

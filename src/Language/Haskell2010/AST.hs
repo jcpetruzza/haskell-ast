@@ -9,9 +9,7 @@ import Data.Traversable (Traversable)
 
 import Language.Haskell.AST as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
-import qualified Language.Haskell.Ext.AST.Patterns as Patterns
-
--- XXX TODO: Many duplicated types...
+import Language.Haskell.Ext.AST.PatternGuards
 
 -- | No extensions
 data NoExts id l
@@ -25,7 +23,6 @@ deriving instance Traversable (NoExts id)
 deriving instance Typeable NoExts
 deriving instance (Data id, Data l) => Data (NoExts id l)
 
-
 -- | This type is used as annotation of @Literals@ in order to
 --   store the exact representation
 newtype ExactRep s = ExactRep { getExactRep :: s }
@@ -33,12 +30,11 @@ newtype ExactRep s = ExactRep { getExactRep :: s }
 
 type Literal = Core.GLiteral (ExactRep String)
 
-
 -- | A Haskell 2010 pattern
 type Pat = Core.GPat PatExts
-newtype PatExts id l
+
+data PatExts id l
     = PatSugar (Sugar.GPat Literal Pat id l)
-    -- TODO: view patterns
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
@@ -46,18 +42,28 @@ instance Annotated (PatExts id) where
     ann (PatSugar pat) = ann pat
     amap = fmap
 
+
 -- | A Haskell 2010 expression
 type Exp = Core.GExp Binds Pat Literal ExpExts
 
 newtype ExpExts id l
-  = ExpSugar (Sugar.GExp Type QStmt Stmt Exp id l)
+  = ExpSugar (Sugar.GExp Binds Type Guard Pat StmtExts Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
+-- | Haskell 2010 uses pattern guards
+type Guard = PatternGuard Stmt
+
+instance Annotated (ExpExts id) where
+    ann (ExpSugar exp) = ann exp
+    amap = fmap
+
 -- | A Haskell 2010 statement
-type Stmt = Sugar.GStmt Binds Exp Pat NoExts
+type Stmt = Sugar.GStmt Binds Exp Pat StmtExts
+
+type StmtExts = NoExts
 
 -- HACK
-type QStmt = ()
 type Binds = ()
 type Type = ()
 
+-- XXX TODO: Many duplicated types...

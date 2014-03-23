@@ -32,12 +32,13 @@ data GPatField pat id l
 
 
 -- | Extension of @GExp@ with standard syntactic sugar
--- (qstmt are the statements allowed inside a list comprehension; for ordinary comprehensions, use Stmt)
-data GExp ty qstmt stmt exp id l
-     = InfixApp l (exp id l) (GQOp id l) (exp id l)  -- ^ infix application
+data GExp binds ty guard pat stmtext exp id l
+     = CaseAlt l (exp id l)
+               [GAlt binds guard exp pat id l]       -- ^ @case@ /exp/ @of@ /alts/
+     | InfixApp l (exp id l) (GQOp id l) (exp id l)  -- ^ infix application
      | NegApp l (exp id l)                           -- ^ negation expression @-/exp/@ (unary minus)
      | If l (exp id l) (exp id l) (exp id l)         -- ^ @if@ /exp/ @then@ /exp/ @else@ /exp/
-     | Do l [stmt id l]                              -- ^ @do@-expression:
+     | Do l [GStmt binds exp pat stmtext id l]       -- ^ @do@-expression:
                                                      --   the last statement in the list
                                                      --   should be an expression.
      | Tuple l Boxed [exp id l]                      -- ^ tuple expression
@@ -57,7 +58,8 @@ data GExp ty qstmt stmt exp id l
      | EnumFromThenTo l (exp id l) (exp id l) (exp id l)
                                                      -- ^ bounded arithmetic sequence,
                                                      --   with first two elements given @[from, then .. to]@
-     | ListComp l (exp id l) [qstmt]                 -- ^ ordinary list comprehension
+     | ListComp l (exp id l)
+                  [GStmt binds exp pat stmtext id l] -- ^ ordinary list comprehension
      | ExpTypeSig l (exp id l) ty                    -- ^ expression with explicit type signature
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -73,6 +75,27 @@ data GFieldUpdate exp id l
     | FieldPun l (GName id l)                -- ^ record field pun
     | FieldWildcard l                        -- ^ record field wildcard
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+-- | An /alt/ alternative in a @case@ expression.
+data GAlt binds guard exp pat id l
+    = Alt l (pat id l) (GGuardedAlts guard exp id l) (Maybe binds)
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+-- | The right-hand sides of a @case@ alternative,
+--   which may be a single right-hand side or a
+--   set of guarded ones.
+data GGuardedAlts guard exp id l
+    = UnGuardedAlt l (exp id l)                    -- ^ @->@ /exp/
+    | GuardedAlts  l [GGuardedAlt guard exp id l]  -- ^ /gdpat/
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+-- | A guarded case alternative @|@ /exp/ @->@ /exp/.
+-- | NB. This follows the haskell'98 specification (no pattern guards)
+data GGuardedAlt guard exp id l
+    = GuardedAlt l (guard id l) (exp id l)
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+
 
 -- | A statement, representing both a /stmt/ in a @do@-expression,
 --   an ordinary /qual/ in a list comprehension, as well as a /stmt/
@@ -107,8 +130,8 @@ instance Functor (pat id) => Annotated (GPatField pat id) where
     amap = fmap
 
 
-instance (Functor (stmt id), Functor (exp id))
-  => Annotated (GExp ty qstmt stmt exp id) where
+instance (Functor (guard id), Functor (stmtext id), Functor (exp id), Functor (pat id))
+  => Annotated (GExp binds ty guard pat stmtext exp id) where
     ann e = case e of
         InfixApp l _ _ _       -> l
         NegApp l _             -> l
@@ -140,6 +163,23 @@ instance Functor (exp id) => Annotated (GFieldUpdate exp id) where
     ann (FieldPun l _)      = l
     ann (FieldWildcard l)   = l
     amap = fmap
+
+instance (Functor (guard id), Functor (pat id),Functor (exp id))
+    => Annotated (GAlt binds guard pat exp id) where
+    ann (Alt l _ _ _) = l
+    amap = fmap
+
+instance (Functor (guard id), Functor (exp id))
+    => Annotated (GGuardedAlts guard exp id) where
+    ann (UnGuardedAlt l _) = l
+    ann (GuardedAlts  l _) = l
+    amap = fmap
+
+instance (Functor (guard id), Functor (exp id))
+   => Annotated (GGuardedAlt guard exp id) where
+    ann (GuardedAlt l _ _) = l
+    amap = fmap
+
 
 instance (Functor (exp id), Functor (pat id), Annotated (stmtext id))
  => Annotated (GStmt binds exp pat stmtext id) where

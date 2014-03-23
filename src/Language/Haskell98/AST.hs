@@ -47,19 +47,22 @@ instance Annotated (PatExts id) where
 type Exp = Core.GExp Binds Pat Literal ExpExts
 
 newtype ExpExts id l
-  = ExpSugar (Sugar.GExp Type QStmt Stmt Exp id l)
+  = ExpSugar (Sugar.GExp Binds Type Guard Pat StmtExts Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+-- Only expressions can be used as guards in H98...
+type Guard = Exp
 
 instance Annotated (ExpExts id) where
     ann (ExpSugar exp) = ann exp
     amap = fmap
 
-
 -- | A Haskell 98 statement
-type Stmt = Sugar.GStmt Binds Exp Pat NoExts
+type Stmt = Sugar.GStmt Binds Exp Pat StmtExts
+
+type StmtExts = NoExts
 
 -- HACK
-type QStmt = ()
 type Binds = ()
 type Type = ()
 
