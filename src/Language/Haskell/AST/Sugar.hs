@@ -7,7 +7,17 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding (GExp, GPat)
+import Language.Haskell.AST hiding (GExp, GPat, GType)
+
+
+-- | Extension of @GType@ with standard syntactic sugar
+data GType ty id l
+     = TyTuple l Boxed [ty id l]                   -- ^ tuple type, possibly boxed
+     | TyList  l (ty id l)                         -- ^ list syntax, e.g. [a], as opposed to [] a
+     | TyParen l (ty id l)                         -- ^ type surrounded by parentheses
+     | TyInfix l (ty id l) (GQName id l) (ty id l) -- ^ infix type constructor
+     | TyKind  l (ty id l) (GKind id l)            -- ^ type with explicit kind signature
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | Extension of @GPat@ with standard syntactic sugar
@@ -60,7 +70,7 @@ data GExp binds ty guard pat stmtext exp id l
                                                      --   with first two elements given @[from, then .. to]@
      | ListComp l (exp id l)
                   [GStmt binds exp pat stmtext id l] -- ^ ordinary list comprehension
-     | ExpTypeSig l (exp id l) ty                    -- ^ expression with explicit type signature
+     | ExpTypeSig l (exp id l) (ty id l)             -- ^ expression with explicit type signature
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Possibly qualified infix operators (/qop/), appearing in expressions.
@@ -110,6 +120,15 @@ data GStmt binds exp pat stmtext id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
+instance Functor (ty id) => Annotated (GType ty id) where
+    ann t = case t of
+      TyTuple l _ _   -> l
+      TyList  l _     -> l
+      TyParen l _     -> l
+      TyInfix l _ _ _ -> l
+      TyKind  l _ _    -> l
+    amap = fmap
+
 instance Functor (pat id) => Annotated (GPat lit pat id) where
     ann p = case p of
       PLit l _          -> l
@@ -130,7 +149,7 @@ instance Functor (pat id) => Annotated (GPatField pat id) where
     amap = fmap
 
 
-instance (Functor (guard id), Functor (stmtext id), Functor (exp id), Functor (pat id))
+instance (Functor (ty id), Functor (guard id), Functor (stmtext id), Functor (exp id), Functor (pat id))
   => Annotated (GExp binds ty guard pat stmtext exp id) where
     ann e = case e of
         InfixApp l _ _ _       -> l
