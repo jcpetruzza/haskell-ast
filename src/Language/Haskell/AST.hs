@@ -298,21 +298,25 @@ data GGuardedRhs guard exp id l
      = GuardedRhs l guard (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
--- | A type qualified with a context.
---   An unqualified type has an empty context.
-data GType asst tyext id l
-     = TyForall l
-        (Maybe [GTyVarBind id l])
-        (Maybe (asst id l))
-        (GType asst tyext id l)          -- ^ qualified type
-     | TyFun   l (GType asst tyext id l)
-                 (GType asst tyext id l) -- ^ function type
-     | TyApp   l (GType asst tyext id l)
-                 (GType asst tyext id l) -- ^ application of a type constructor
+-- | A simple type
+data GType tyext id l
+     = TyFun   l (GType tyext id l)
+                 (GType tyext id l) -- ^ function type
+     | TyApp   l (GType tyext id l)
+                 (GType tyext id l) -- ^ application of a type constructor
      | TyVar   l (GName id l)            -- ^ type variable
      | TyCon   l (GQName id l)           -- ^ named type or type constructor
      | TyExt (tyext id l)                -- ^ an extended type
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+-- | A (perhaps) qualified type
+data GQualType asst ty id l
+    = TyForall l
+        (Maybe [GTyVarBind id l])
+        (Maybe (asst id l))
+        (ty id l)          -- ^ qualified type
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
 
 -- | Flag denoting whether a tuple is boxed or unboxed.
 data Boxed = Boxed | Unboxed
@@ -493,13 +497,13 @@ unboxed_singleton_tycon_name l = Special l (UnboxedSingleCon l)
 tuple_tycon_name :: l -> Boxed -> Int -> GQName id l
 tuple_tycon_name l b i = tuple_con_name l b i
 
-unit_tycon, fun_tycon, list_tycon, unboxed_singleton_tycon :: l -> GType asst tyext id l
+unit_tycon, fun_tycon, list_tycon, unboxed_singleton_tycon :: l -> GType tyext id l
 unit_tycon l = TyCon l $ unit_tycon_name l
 fun_tycon  l = TyCon l $ fun_tycon_name  l
 list_tycon l = TyCon l $ list_tycon_name l
 unboxed_singleton_tycon l = TyCon l $ unboxed_singleton_tycon_name l
 
-tuple_tycon :: l -> Boxed -> Int -> GType asst tyext id l
+tuple_tycon :: l -> Boxed -> Int -> GType tyext id l
 tuple_tycon l b i = TyCon l (tuple_tycon_name l b i)
 
 
@@ -715,16 +719,18 @@ instance Functor (exp id) => Annotated (GGuardedRhs guard exp id) where
      ann (GuardedRhs l _ _) = l
      amap = fmap
 
-instance (Functor (asst id), Functor (tyext id))
- => Annotated (GType asst tyext id) where
+instance Functor (tyext id) => Annotated (GType tyext id) where
     ann t = case t of
-      TyForall l _ _ _ -> l
       TyFun   l _ _    -> l
       TyApp   l _ _    -> l
       TyVar   l _      -> l
       TyCon   l _      -> l
     amap = fmap
 
+instance (Functor (asst id), Functor (ty id))
+ => Annotated (GQualType asst ty id) where
+    ann (TyForall l _ _ _) = l
+    amap = fmap
 
 instance Annotated (GTyVarBind id) where
     ann (KindedVar   l _ _) = l

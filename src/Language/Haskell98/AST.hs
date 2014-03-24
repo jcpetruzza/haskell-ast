@@ -72,14 +72,16 @@ type Assertion = Core.GAsst GName AssertionExts
 type AssertionExts = NoExts
 
 -- | A Haskell 98 type
-type Type = Core.GType Assertion TypeExts
+type Type = Core.GType TypeExts
 
-newtype TypeExts id l
-  = TypeSugar (Sugar.GType Type id l)
+data TypeExts id l
+  = QualType  (Core.GQualType Assertion Type id l)
+  | TypeSugar (Sugar.GType Type id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (TypeExts id) where
-    ann (TypeSugar t) = ann t
+    ann (QualType  qty) = ann qty
+    ann (TypeSugar ty)  = ann ty
     amap = fmap
 
 -- HACK

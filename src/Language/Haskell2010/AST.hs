@@ -24,8 +24,8 @@ deriving instance Typeable NoExts
 deriving instance (Data id, Data l) => Data (NoExts id l)
 
 instance Annotated (NoExts id) where
-    ann  = undefined
-    amap = undefined
+    ann  = error "ann / Annotated NoExts"
+    amap = error "fmap / Annotated NoExts"
 
 -- | This type is used as annotation of @Literals@ in order to
 --   store the exact representation
@@ -72,13 +72,15 @@ type Assertion = Core.GAsst GName AssertionExts
 type AssertionExts = NoExts
 
 -- | A Haskell 2010 type
-type Type = Core.GType Assertion TypeExts
+type Type = Core.GType TypeExts
 
-newtype TypeExts id l
-  = TypeSugar (Sugar.GType Type id l)
+data TypeExts id l
+  = QualType  (Core.GQualType Assertion Type id l)
+  | TypeSugar (Sugar.GType Type id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (TypeExts id) where
+    ann (QualType  qty) = ann qty
     ann (TypeSugar t) = ann t
     amap = fmap
 
