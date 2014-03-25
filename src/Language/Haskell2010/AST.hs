@@ -25,7 +25,6 @@ deriving instance (Data id, Data l) => Data (NoExts id l)
 
 instance Annotated (NoExts id) where
     ann  = error "ann / Annotated NoExts"
-    amap = error "fmap / Annotated NoExts"
 
 -- | This type is used as annotation of @Literals@ in order to
 --   store the exact representation
@@ -44,22 +43,22 @@ data PatExts id l
 
 instance Annotated (PatExts id) where
     ann (PatSugar pat) = ann pat
-    amap = fmap
 
 
 -- | A Haskell 2010 expression
-type Exp = Core.GExp Binds Pat Literal ExpExts
+type Exp = Core.GExp LetBinds Pat Literal ExpExts
 
 newtype ExpExts id l
-  = ExpSugar (Sugar.GExp Binds Type Guard Pat StmtExts Exp id l)
+  = ExpSugar (Sugar.GExp LetBinds Type Guard Pat StmtExts Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
--- | Haskell 2010 uses pattern guards
-type Guard = PatternGuard Stmt
 
 instance Annotated (ExpExts id) where
     ann (ExpSugar exp) = ann exp
-    amap = fmap
+
+
+-- | Haskell 2010 uses pattern guards
+data Guard id l = PatternGuard l (Stmt id l)
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A Haskell 2010 statement
 type Stmt = Sugar.GStmt Binds Exp Pat StmtExts
@@ -82,9 +81,36 @@ data TypeExts id l
 instance Annotated (TypeExts id) where
     ann (QualType  qty) = ann qty
     ann (TypeSugar t) = ann t
-    amap = fmap
 
--- HACK
-type Binds = ()
 
--- XXX TODO: Many duplicated types...
+-- | Haskell 2010 binds
+type Bind  = Core.GBind  Type Guard Exp Pat BindExts
+type Binds = Core.GBinds Type Guard Exp Pat BindExts
+type BindExts = NoExts
+
+-- | This type is essentially the same as @Binds@, but we need it
+--   to break the mutual recursion between @Exp@ and @Binds@
+data LetBinds id l
+     = LetBinds l [Bind id l]
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+instance Annotated (LetBinds id) where
+    ann (LetBinds l _) = l
+
+-- | Haskell 2010 assertions
+type Asst = Core.GAsst GName NoExts
+
+-- | Haskell 2010 class and instance declarations
+type ClassRelatedDecl = Core.GClassRelatedDecl Asst Type Bind ClassBodyExts InstBodyExts ClassRelExts
+
+type ClassBodyExts = NoExts
+type InstBodyExts  = NoExts
+type ClassRelExts  = NoExts
+
+-- | Haskell 2010 type declarations
+type TypeDecl = Core.GTypeDecl Asst Type TypeDeclExts
+type TypeDeclExts = NoExts
+
+-- | A Haskell 2010 module
+type Module = Core.GModule Bind TypeDecl ClassRelatedDecl DeclExts
+type DeclExts = NoExts

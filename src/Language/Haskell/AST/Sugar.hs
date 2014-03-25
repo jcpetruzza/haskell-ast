@@ -88,7 +88,7 @@ data GFieldUpdate exp id l
 
 -- | An /alt/ alternative in a @case@ expression.
 data GAlt binds guard exp pat id l
-    = Alt l (pat id l) (GGuardedAlts guard exp id l) (Maybe binds)
+    = Alt l (pat id l) (GGuardedAlts guard exp id l) (Maybe (binds id l))
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The right-hand sides of a @case@ alternative,
@@ -115,21 +115,20 @@ data GStmt binds exp pat stmtext id l
     | Qualifier l (exp id l)             --   an action whose result is discarded;
                                          --   in a list comprehension and pattern guard,
                                          --   a guard expression
-    | LetStmt l binds                    -- ^ local bindings
+    | LetStmt l (binds id l)             -- ^ local bindings
     | StmtExt (stmtext id l)             -- ^ an extended statement
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
-instance Functor (ty id) => Annotated (GType ty id) where
+instance Annotated (GType ty id) where
     ann t = case t of
       TyTuple l _ _   -> l
       TyList  l _     -> l
       TyParen l _     -> l
       TyInfix l _ _ _ -> l
       TyKind  l _ _    -> l
-    amap = fmap
 
-instance Functor (pat id) => Annotated (GPat lit pat id) where
+instance Annotated (GPat lit pat id) where
     ann p = case p of
       PLit l _          -> l
       PNeg l _          -> l
@@ -140,17 +139,14 @@ instance Functor (pat id) => Annotated (GPat lit pat id) where
       PRec l _ _        -> l
       PAsPat l _ _      -> l
       PIrrPat l _       -> l
-    amap = fmap
 
-instance Functor (pat id) => Annotated (GPatField pat id) where
+instance Annotated (GPatField pat id) where
     ann (PFieldPat l _ _)  = l
     ann (PFieldPun l _)    = l
     ann (PFieldWildcard l) = l
-    amap = fmap
 
 
-instance (Functor (ty id), Functor (guard id), Functor (stmtext id), Functor (exp id), Functor (pat id))
-  => Annotated (GExp binds ty guard pat stmtext exp id) where
+instance Annotated (GExp binds ty guard pat stmtext exp id) where
     ann e = case e of
         InfixApp l _ _ _       -> l
         NegApp l _             -> l
@@ -170,41 +166,30 @@ instance (Functor (ty id), Functor (guard id), Functor (stmtext id), Functor (ex
         EnumFromThenTo l _ _ _ -> l
         ListComp l _ _         -> l
         ExpTypeSig l _ _       -> l
-    amap = fmap
 
 instance Annotated (GQOp id) where
     ann (QVarOp l _) = l
     ann (QConOp l _) = l
-    amap = fmap
 
-instance Functor (exp id) => Annotated (GFieldUpdate exp id) where
+instance Annotated (GFieldUpdate exp id) where
     ann (FieldUpdate l _ _) = l
     ann (FieldPun l _)      = l
     ann (FieldWildcard l)   = l
-    amap = fmap
 
-instance (Functor (guard id), Functor (pat id),Functor (exp id))
-    => Annotated (GAlt binds guard pat exp id) where
+instance Annotated (GAlt binds guard pat exp id) where
     ann (Alt l _ _ _) = l
-    amap = fmap
 
-instance (Functor (guard id), Functor (exp id))
-    => Annotated (GGuardedAlts guard exp id) where
+instance Annotated (GGuardedAlts guard exp id) where
     ann (UnGuardedAlt l _) = l
     ann (GuardedAlts  l _) = l
-    amap = fmap
 
-instance (Functor (guard id), Functor (exp id))
-   => Annotated (GGuardedAlt guard exp id) where
+instance Annotated (GGuardedAlt guard exp id) where
     ann (GuardedAlt l _ _) = l
-    amap = fmap
 
 
-instance (Functor (exp id), Functor (pat id), Annotated (stmtext id))
- => Annotated (GStmt binds exp pat stmtext id) where
+instance Annotated (stmtext id) => Annotated (GStmt binds exp pat stmtext id) where
     ann (Generator l _ _) = l
     ann (Qualifier l _)   = l
     ann (LetStmt l _)     = l
     ann (StmtExt e)       = ann e
-    amap = fmap
 

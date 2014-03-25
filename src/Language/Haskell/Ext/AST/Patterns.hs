@@ -30,18 +30,14 @@ data NPlusKPat (pat :: * -> * -> *) id l
     = PNPlusK l (GName id l) Integer            -- ^ n+k pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Functor (pat id) => Annotated (BangPat pat id) where
+instance Annotated (BangPat pat id) where
     ann (PBangPat l _) = l
-    amap = fmap
 
-instance Functor (pat id) => Annotated (PatTySig ty pat id) where
+instance Annotated (PatTySig ty pat id) where
     ann (PatTypeSig l _ _) = l
-    amap = fmap
 
 instance Annotated (PatExplTyArg ty pat id) where
     ann (PExplTypeArg l _ _) = l
-    amap = fmap
 
 instance Annotated (NPlusKPat pat id) where
     ann (PNPlusK l _ _) = l
-    amap = fmap
