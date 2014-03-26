@@ -35,15 +35,15 @@ cabal-version:
 
 library
   exposed-modules:
-    Language.Haskell.AST
     Language.Haskell98.AST
     Language.Haskell2010.AST
 
-   -- Language.Haskell.Ext.AST
+    Language.Haskell.AST.Core
+    Language.Haskell.AST.Sugar
 
-    -- Language.Haskell.Ext.Parser
+    Language.Haskell.Parser.Internal
 
-  -- other-modules:
+ -- other-modules:
   -- other-extensions:
   build-depends:
     base

@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, FlexibleContexts, KindSignatures #-}
-module Language.Haskell.Ext.AST.Patterns
+module Language.Haskell.AST.Exts.Patterns
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding (GPat)
+import Language.Haskell.AST.Core hiding (GPat)
 
 
 -- | Bang patterns extension to @GPat@

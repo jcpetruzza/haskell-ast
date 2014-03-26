@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.MDo
+module Language.Haskell.AST.Exts.MDo
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GStmt )
+import Language.Haskell.AST.Core hiding ( GStmt )
 
 -- | Extension of @GStmt@ with mdo
 data GStmt stmt l
@@ -16,4 +16,3 @@ data GStmt stmt l
 
 instance Annotated (GStmt stmt) where
     ann (MDo l _) = l
-    amap = fmap

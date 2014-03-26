@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, FlexibleContexts #-}
-module Language.Haskell.Ext.AST.PatternGuards
+module Language.Haskell.AST.Exts.PatternGuards
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GGuardedAlt )
+import Language.Haskell.AST.Core hiding ( GGuardedAlt )
 
 -- | A guard according to the PatternGuard extension
 data PatternGuard stmt id l

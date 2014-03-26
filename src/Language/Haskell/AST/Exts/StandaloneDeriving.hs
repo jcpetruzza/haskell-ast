@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, FlexibleContexts #-}
-module Language.Haskell.Ext.AST.StandaloneDeriving
+module Language.Haskell.AST.Exts.StandaloneDeriving
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GClassRelatedDecl )
+import Language.Haskell.AST.Core hiding ( GClassRelatedDecl )
 
 
 data GClassRelatedDecl asst ty id l

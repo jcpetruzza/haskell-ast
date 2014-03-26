@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, FlexibleContexts #-}
-module Language.Haskell.AST
+module Language.Haskell.AST.Core
 
 where
 

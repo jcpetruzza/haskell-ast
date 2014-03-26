@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.HaRP
+module Language.Haskell.AST.Exts.HaRP
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST
+import Language.Haskell.AST.Core
 
 
 -- | HaRP extensions to the @GPat@ type: regular list pattern
@@ -45,11 +45,9 @@ data GRPat stmt pat id l
 
 instance Annotated (GPat_RegList stmt pat id) where
     ann (PRPat l _) = l
-    amap = fmap
 
 instance Annotated (GPat_XRegList stmt pat id) where
     ann (PXRPats l _) = l
-    amap = fmap
 
 instance Annotated GRPatOp where
     ann (RPStar  l) = l
@@ -58,7 +56,6 @@ instance Annotated GRPatOp where
     ann (RPPlusG l) = l
     ann (RPOpt   l) = l
     ann (RPOptG  l) = l
-    amap = fmap
 
 instance Annotated (GRPat stmt pat id) where
     ann rp = case rp of
@@ -70,4 +67,3 @@ instance Annotated (GRPat stmt pat id) where
       RPAs l _ _       -> l
       RPParen l _      -> l
       RPPat l _        -> l
-    amap = fmap

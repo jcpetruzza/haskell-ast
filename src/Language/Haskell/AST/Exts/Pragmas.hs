@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.Pragmas
+module Language.Haskell.AST.Exts.Pragmas
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GModulePragma, GDecl, GExp )
+import Language.Haskell.AST.Core hiding ( GModulePragma, GDecl, GExp )
 
 -- | An extension of module pragmas with annotations
 data GModulePragma_Ann exp id l
@@ -105,79 +105,61 @@ data GDef_GenPragma exp l
 
 
 
-
 instance Annotated (GModulePragma_Ann exp id) where
     ann (AnnModulePragma  l _) = l
-    amap = fmap
 
 instance Annotated (GAnnotation exp id) where
     ann (Ann     l _ _) = l
     ann (TypeAnn l _ _) = l
     ann (ModuleAnn l _) = l
-    amap = fmap
 
 
 instance Annotated (GDecl_RulePragma ty exp id) where
     ann (RulePragmaDecl l _) = l
-    amap = fmap
 
 instance Annotated (GRule ty exp id) where
     ann (Rule l _ _ _ _ _) = l
-    amap = fmap
 
 instance Annotated (GRuleVar ty id) where
     ann (RuleVar l _) = l
     ann (TypedRuleVar l _ _) = l
-    amap = fmap
 
 instance Annotated (GDecl_DeprPragma id) where
     ann (DeprPragmaDecl l _) = l
-    amap = fmap
 
 instance Annotated (GDecl_WarnPragma id) where
     ann (WarnPragmaDecl l _) = l
-    amap = fmap
 
 instance Annotated (GDecl_InlinePragma id) where
     ann (InlineSig l _ _ _) = l
-    amap = fmap
 
 instance Annotated (GDecl_InlineConPragma id) where
     ann (InlineConlikeSig l _ _) = l
-    amap = fmap
 
 instance Annotated (GDecl_SpecPragma ty id) where
     ann (SpecSig l _ _ _) = l
-    amap = fmap
 
 instance Annotated (GDecl_SpecInlinePragma ty id) where
     ann (SpecInlineSig l _ _ _ _) = l
-    amap = fmap
 
 instance Annotated GActivation where
     ann (ActiveFrom   l _) = l
     ann (ActiveUntil  l _) = l
-    amap = fmap
 
 
 instance Annotated (GDecl_SpecInstPragma insthd ctx id) where
     ann (InstSig l _ _) = l
-    amap = fmap
 
 instance Annotated (GDecl_AnnPragma exp id) where
     ann (AnnPragma l _) = l
-    amap = fmap
 
 instance Annotated (GDef_CorePragma exp) where
     ann (CorePragma l _ _)   = l
-    amap = fmap
 
 instance Annotated (GDef_SCCPragma exp) where
     ann (SCCPragma  l _ _)   = l
-    amap = fmap
 
 instance Annotated (GDef_GenPragma exp) where
     ann (GenPragma  l _ _ _ _) = l
-    amap = fmap
 
 

@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, FlexibleContexts #-}
-module Language.Haskell.Ext.AST.TypeFamilies
+module Language.Haskell.AST.Exts.TypeFamilies
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GDecl )
+import Language.Haskell.AST.Core hiding ( GDecl )
 
 
 data GDecl asst ty id l
@@ -46,33 +46,24 @@ data GAsstEq ty id l
      = EqualP l (ty id l) (ty id l) -- ^ type equality constraint
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance (Functor (asst id), Functor (ty id))
- => Annotated (GDecl asst ty id) where
+instance Annotated (GDecl asst ty id) where
     ann decl = case decl of
         TypeFamDecl  l _ _       -> l
         DataFamDecl  l _ _ _     -> l
         TypeInsDecl  l _ _       -> l
         DataInsDecl  l _ _ _ _   -> l
         GDataInsDecl l _ _ _ _ _ -> l
-    amap = fmap
 
-instance (Functor (asst id), Functor (ty id))
- => Annotated (GClassDecl asst ty id) where
-kkj    ann (ClsDataFam l _ _ _) = l
+instance Annotated (GClassDecl asst ty id) where
+    ann (ClsDataFam l _ _ _) = l
     ann (ClsTyFam   l    _ _) = l
     ann (ClsTyDef   l _ _) = l
-    amap = fmap
 
-
-instance (Functor (asst id), Functor (ty id))
- => Annotated (GInstDecl asst ty id) where
+instance Annotated (GInstDecl asst ty id) where
     ann insd = case insd of
         InsType   l _ _        -> l
         InsData   l _ _ _ _    -> l
         InsGData  l _ _ _ _ _  -> l
-    amap = fmap
 
-
-instance Functor (stmt id) => Annotated (GAsstEq stmt id) where
+instance Annotated (GAsstEq stmt id) where
     ann (EqualP l _ _) = l
-    amap = fmap

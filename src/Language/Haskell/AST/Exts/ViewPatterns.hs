@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.ViewPatterns
+module Language.Haskell.AST.Exts.ViewPatterns
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GPat )
+import Language.Haskell.AST.Core hiding ( GPat )
 
 -- | Extension of the @GPat@ with view patterns
 data GPat exp pat id l
@@ -16,4 +16,3 @@ data GPat exp pat id l
 
 instance Annotated (GPat exp pat id) where
    ann (PViewPat l _ _) = l
-   amap = fmap

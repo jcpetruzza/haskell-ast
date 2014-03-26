@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.Arrows
+module Language.Haskell.AST.Exts.Arrows
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GExp, GStmt )
+import Language.Haskell.AST.Core hiding ( GExp, GStmt )
 
 data GExp exp pat l
      = Proc           l pat exp     -- ^ arrows proc: @proc@ /pat/ @->@ /exp/
@@ -29,8 +29,5 @@ instance Annotated (GExp exp pat) where
         LeftArrHighApp  l _ _ -> l
         RightArrHighApp l _ _ -> l
 
-    amap = fmap
-
 instance Annotated (GStmt stmt) where
     ann (RecStmt l _) = l
-    amap = fmap

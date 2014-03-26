@@ -7,9 +7,9 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST as Core
+import Language.Haskell.AST.Core as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
-import qualified Language.Haskell.Ext.AST.Patterns as Patterns
+import qualified Language.Haskell.AST.Exts.Patterns as Patterns
 
 -- | No extensions
 data NoExts id l

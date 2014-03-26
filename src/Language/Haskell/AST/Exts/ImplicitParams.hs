@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.ImplicitParams
+module Language.Haskell.AST.Exts.ImplicitParams
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GBinds, GExp, GAsst )
+import Language.Haskell.AST.Core hiding ( GBinds, GExp, GAsst )
 
 
 -- | The extension of the @GBinds@ type with implicit parameters
@@ -38,21 +38,16 @@ data GExp id l
 
 instance Annotated (GBinds exp id) where
     ann (IPBinds l _)   = l
-    amap = fmap
 
 instance Annotated (GIPBind exp id) where
     ann (IPBind l _ _) = l
-    amap = fmap
 
 instance Annotated (GIPName id) where
     ann (IPDup l _) = l
     ann (IPLin l _) = l
-    amap = fmap
 
 instance Annotated (GAsst ty id) where
     ann (IParam l _ _) = l
-    amap = fmap
 
 instance Annotated (GExp id) where
     ann (IPVar l _) = l
-    amap = fmap

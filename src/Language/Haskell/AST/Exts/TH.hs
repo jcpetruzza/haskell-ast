@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.TH
+module Language.Haskell.AST.Exts.TH
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding (GDecl, GExp, GPat)
+import Language.Haskell.AST.Core hiding (GDecl, GExp, GPat)
 
 -- | The extension of the @GDecl@ type with TH stuff
 data GDecl exp l
@@ -47,11 +47,9 @@ data GBracket decl ty exp pat id l
 
 instance Annotated (GDecl exp) where
     ann (SpliceDecl l _) = l
-    amap = fmap
 
 instance Annotated (GPat lit id) where
     ann (PQuasiQuote l _ _) = l
-    amap = fmap
 
 instance Annotated (GExp decl ty exp pat id) where
     ann e = case e of
@@ -60,17 +58,14 @@ instance Annotated (GExp decl ty exp pat id) where
         BracketExp l _         -> l
         SpliceExp l _          -> l
         QuasiQuote l _ _      -> l
-    amap = fmap
 
 instance Annotated (GSplice exp id) where
     ann (IdSplice l _) = l
     ann (ParenSplice l _) = l
-    amap = fmap
 
 instance Annotated (GBracket decl ty exp pat id) where
     ann (ExpBracket l _) = l
     ann (PatBracket l _) = l
     ann (TypeBracket l _) = l
     ann (DeclBracket l _) = l
-    amap = fmap
 

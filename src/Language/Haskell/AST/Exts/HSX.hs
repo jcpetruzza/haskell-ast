@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.Ext.AST.HSX
+module Language.Haskell.AST.Exts.HSX
 
 where
 
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST hiding ( GModule, GPat, GExp )
+import Language.Haskell.AST.Core hiding ( GModule, GPat, GExp )
 
 -- | XML extenstions to the @GModule@ type
 data GModule decl impdecl exp pat id l
@@ -61,8 +61,6 @@ instance Annotated (GModule decl impdecl exp pat id) where
     ann (XmlPage l _ _ _ _ _ _) = l
     ann (XmlHybrid l _ _ _ _ _ _ _ _) = l
 
-    amap = fmap
-
 
 instance Annotated (GPat pat id) where
     ann p = case p of
@@ -70,23 +68,18 @@ instance Annotated (GPat pat id) where
       PXETag   l _ _ _   -> l
       PXPcdata l _       -> l
       PXPatTag l _       -> l
-    amap = fmap
 
 
 instance Annotated (GPXAttr pat id) where
     ann (PXAttr l _ _) = l
-    amap = fmap
 
 
 instance Annotated (GXName id) where
     ann (XName l _)  = l
     ann (XDomName l _ _) = l
-    amap = fmap
-
 
 instance Annotated (GXAttr exp id) where
     ann (XAttr l _ _) = l
-    amap = fmap
 
 instance Annotated (GExp exp lit id) where
     ann e = case e of
@@ -95,5 +88,3 @@ instance Annotated (GExp exp lit id) where
       XPcdata   l _        -> l
       XExpTag   l _        -> l
       XChildTag l _        -> l
-
-    amap = fmap
