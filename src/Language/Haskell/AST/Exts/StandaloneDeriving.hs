@@ -7,13 +7,13 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( GClassRelatedDecl )
+import Language.Haskell.AST.Core hiding ( ClassRelatedDecl )
 
 
-data GClassRelatedDecl asst ty id l
-     = DerivDecl    l (Maybe (GContext asst id l)) (GInstHead ty id l)
+data ClassRelatedDecl asst ty id l
+     = DerivDecl    l (Maybe (Context asst id l)) (InstHead ty id l)
      -- ^ A standalone deriving declaration
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (GClassRelatedDecl asst ty id) where
+instance Annotated (ClassRelatedDecl asst ty id) where
      ann (DerivDecl l _ _) = l

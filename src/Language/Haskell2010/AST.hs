@@ -7,7 +7,8 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core as Core
+import Language.Haskell.AST.Core hiding (Literal,Pat,Type,Exp,Bind,Binds,Asst,TypeDecl,ClassRelatedDecl)
+import qualified Language.Haskell.AST.Core as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
 import Language.Haskell.AST.Exts.PatternGuards
 
@@ -31,13 +32,13 @@ instance Annotated (NoExts id) where
 newtype ExactRep s = ExactRep { getExactRep :: s }
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-type Literal = Core.GLiteral (ExactRep String)
+type Literal = Core.Literal (ExactRep String)
 
 -- | A Haskell 2010 pattern
-type Pat = Core.GPat PatExts
+type Pat = Core.Pat PatExts
 
 data PatExts id l
-    = PatSugar (Sugar.GPat Literal Pat id l)
+    = PatSugar (Sugar.Pat Literal Pat id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
@@ -46,10 +47,10 @@ instance Annotated (PatExts id) where
 
 
 -- | A Haskell 2010 expression
-type Exp = Core.GExp LetBinds Pat Literal ExpExts
+type Exp = Core.Exp LetBinds Pat Literal ExpExts
 
 newtype ExpExts id l
-  = ExpSugar (Sugar.GExp LetBinds Type Guard Pat StmtExts Exp id l)
+  = ExpSugar (Sugar.Exp LetBinds Type Guard Pat StmtExts Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (ExpExts id) where
@@ -61,21 +62,21 @@ data Guard id l = PatternGuard l (Stmt id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A Haskell 2010 statement
-type Stmt = Sugar.GStmt Binds Exp Pat StmtExts
+type Stmt = Sugar.Stmt Binds Exp Pat StmtExts
 
 type StmtExts = NoExts
 
 -- | A Haskell 2010 assertion is of the form "C a", with a variable
 --   (should be, e.g., a type without context, for FlexibleContexts...)
-type Assertion = Core.GAsst GName AssertionExts
+type Assertion = Core.Asst Name AssertionExts
 type AssertionExts = NoExts
 
 -- | A Haskell 2010 type
-type Type = Core.GType TypeExts
+type Type = Core.Type TypeExts
 
 data TypeExts id l
-  = QualType  (Core.GQualType Assertion Type id l)
-  | TypeSugar (Sugar.GType Type id l)
+  = QualType  (Core.QualType Assertion Type id l)
+  | TypeSugar (Sugar.Type Type id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (TypeExts id) where
@@ -84,8 +85,8 @@ instance Annotated (TypeExts id) where
 
 
 -- | Haskell 2010 binds
-type Bind  = Core.GBind  Type Guard Exp Pat BindExts
-type Binds = Core.GBinds Type Guard Exp Pat BindExts
+type Bind  = Core.Bind  Type Guard Exp Pat BindExts
+type Binds = Core.Binds Type Guard Exp Pat BindExts
 type BindExts = NoExts
 
 -- | This type is essentially the same as @Binds@, but we need it
@@ -98,19 +99,19 @@ instance Annotated (LetBinds id) where
     ann (LetBinds l _) = l
 
 -- | Haskell 2010 assertions
-type Asst = Core.GAsst GName NoExts
+type Asst = Core.Asst Name NoExts
 
 -- | Haskell 2010 class and instance declarations
-type ClassRelatedDecl = Core.GClassRelatedDecl Asst Type Bind ClassBodyExts InstBodyExts ClassRelExts
+type ClassRelatedDecl = Core.ClassRelatedDecl Asst Type Bind ClassBodyExts InstBodyExts ClassRelExts
 
 type ClassBodyExts = NoExts
 type InstBodyExts  = NoExts
 type ClassRelExts  = NoExts
 
 -- | Haskell 2010 type declarations
-type TypeDecl = Core.GTypeDecl Asst Type TypeDeclExts
+type TypeDecl = Core.TypeDecl Asst Type TypeDeclExts
 type TypeDeclExts = NoExts
 
 -- | A Haskell 2010 module
-type Module = Core.GModule Bind TypeDecl ClassRelatedDecl DeclExts
+type Module = Core.Module Bind TypeDecl ClassRelatedDecl DeclExts
 type DeclExts = NoExts

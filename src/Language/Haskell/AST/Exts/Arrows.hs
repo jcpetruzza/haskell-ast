@@ -7,21 +7,21 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( GExp, GStmt )
+import Language.Haskell.AST.Core hiding ( Exp, Stmt )
 
-data GExp exp pat l
+data Exp exp pat l
      = Proc           l pat exp     -- ^ arrows proc: @proc@ /pat/ @->@ /exp/
-    | LeftArrApp      l exp exp     -- ^ arrow application (Gfrom left): /exp/ @-<@ /exp/
+    | LeftArrApp      l exp exp     -- ^ arrow application (from left): /exp/ @-<@ /exp/
     | RightArrApp     l exp exp     -- ^ arrow application (from right): /exp/ @>-@ /exp/
-    | LeftArrHighApp  l exp exp     -- ^ higher-order arrow application (Gfrom left): /exp/ @-<<@ /exp/
+    | LeftArrHighApp  l exp exp     -- ^ higher-order arrow application (from left): /exp/ @-<<@ /exp/
     | RightArrHighApp l exp exp     -- ^ higher-order arrow application (from right): /exp/ @>>-@ /exp/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data GStmt stmt l
+data Stmt stmt l
     = RecStmt l [stmt]    -- ^ a recursive binding group for arrows
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (GExp exp pat) where
+instance Annotated (Exp exp pat) where
     ann e = case e of
         Proc            l _ _ -> l
         LeftArrApp      l _ _ -> l
@@ -29,5 +29,5 @@ instance Annotated (GExp exp pat) where
         LeftArrHighApp  l _ _ -> l
         RightArrHighApp l _ _ -> l
 
-instance Annotated (GStmt stmt) where
+instance Annotated (Stmt stmt) where
     ann (RecStmt l _) = l

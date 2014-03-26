@@ -11,18 +11,18 @@ import Language.Haskell.AST.Core
 
 
 -- | HaRP extensions to the @GPat@ type: regular list pattern
-data GPat_RegList stmt pat id l
-    = PRPat l [GRPat stmt pat id l]       -- ^ regular list pattern
+data Pat_RegList stmt pat id l
+    = PRPat l [RPat stmt pat id l]       -- ^ regular list pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | HaRP extensions to the @GPat@ type: regular list pattern
-data GPat_XRegList stmt pat id l
-    =  PXRPats  l [GRPat stmt pat id l]   -- ^ XML regular list pattern
+data Pat_XRegList stmt pat id l
+    =  PXRPats  l [RPat stmt pat id l]   -- ^ XML regular list pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A regular pattern operator.
-data GRPatOp l
+data RPatOp l
     = RPStar  l  -- ^ @*@ = 0 or more
     | RPStarG l  -- ^ @*!@ = 0 or more, greedy
     | RPPlus  l  -- ^ @+@ = 1 or more
@@ -32,24 +32,24 @@ data GRPatOp l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An entity in a regular pattern.
-data GRPat stmt pat id l
-    = RPOp l (GRPat stmt pat id l) (GRPatOp l)   -- ^ operator pattern, e.g. pat*
-    | RPEither l (GRPat stmt pat id l) (GRPat stmt pat id l) -- ^ choice pattern, e.g. (1 | 2)
-    | RPSeq l [GRPat stmt pat id l]             -- ^ sequence pattern, e.g. (| 1, 2, 3 |)
+data RPat stmt pat id l
+    = RPOp l (RPat stmt pat id l) (RPatOp l)   -- ^ operator pattern, e.g. pat*
+    | RPEither l (RPat stmt pat id l) (RPat stmt pat id l) -- ^ choice pattern, e.g. (1 | 2)
+    | RPSeq l [RPat stmt pat id l]             -- ^ sequence pattern, e.g. (| 1, 2, 3 |)
     | RPGuard l pat [stmt]   -- ^ guarded pattern, e.g. (| p | p < 3 |)
-    | RPCAs l (GName id l) (GRPat stmt pat id l)    -- ^ non-linear variable binding, e.g. (foo\@:(1 | 2))*
-    | RPAs l (GName id l) (GRPat stmt pat id l)     -- ^ linear variable binding, e.g. foo\@(1 | 2)
-    | RPParen l (GRPat stmt pat id l)           -- ^ parenthesised pattern, e.g. (2*)
+    | RPCAs l (Name id l) (RPat stmt pat id l)    -- ^ non-linear variable binding, e.g. (foo\@:(1 | 2))*
+    | RPAs l (Name id l) (RPat stmt pat id l)     -- ^ linear variable binding, e.g. foo\@(1 | 2)
+    | RPParen l (RPat stmt pat id l)           -- ^ parenthesised pattern, e.g. (2*)
     | RPPat l pat                          -- ^ an ordinary pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (GPat_RegList stmt pat id) where
+instance Annotated (Pat_RegList stmt pat id) where
     ann (PRPat l _) = l
 
-instance Annotated (GPat_XRegList stmt pat id) where
+instance Annotated (Pat_XRegList stmt pat id) where
     ann (PXRPats l _) = l
 
-instance Annotated GRPatOp where
+instance Annotated RPatOp where
     ann (RPStar  l) = l
     ann (RPStarG l) = l
     ann (RPPlus  l) = l
@@ -57,7 +57,7 @@ instance Annotated GRPatOp where
     ann (RPOpt   l) = l
     ann (RPOptG  l) = l
 
-instance Annotated (GRPat stmt pat id) where
+instance Annotated (RPat stmt pat id) where
     ann rp = case rp of
       RPOp l _ _       -> l
       RPEither l _ _   -> l

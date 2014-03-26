@@ -7,19 +7,19 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( GModulePragma, GDecl, GExp )
+import Language.Haskell.AST.Core hiding ( ModulePragma, Decl, Exp )
 
 -- | An extension of module pragmas with annotations
-data GModulePragma_Ann exp id l
-    = AnnModulePragma  l (GAnnotation exp id l)
+data ModulePragma_Ann exp id l
+    = AnnModulePragma  l (Annotation exp id l)
                         -- ^ ANN pragma with module scope
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An annotation through an ANN pragma.
-data GAnnotation exp id l
-    = Ann       l (GName id l)  exp
+data Annotation exp id l
+    = Ann       l (Name id l)  exp
     -- ^ An annotation for a declared name.
-    | TypeAnn   l (GName id l)  exp
+    | TypeAnn   l (Name id l)  exp
     -- ^ An annotation for a declared type.
     | ModuleAnn l               exp
     -- ^ An annotation for the defining module.
@@ -27,139 +27,139 @@ data GAnnotation exp id l
 
 
 -- | A RULES pragma
-data GDecl_RulePragma ty exp id l
-     = RulePragmaDecl   l [GRule ty exp id l]
+data Decl_RulePragma ty exp id l
+     = RulePragmaDecl   l [Rule ty exp id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The body of a RULES pragma.
-data GRule ty exp id l
-    = Rule l String (Maybe (GActivation l)) (Maybe [GRuleVar ty id l]) exp exp
+data Rule ty exp id l
+    = Rule l String (Maybe (Activation l)) (Maybe [RuleVar ty id l]) exp exp
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Variables used in a RULES pragma, optionally annotated with types
-data GRuleVar ty id l
-    = RuleVar l (GName id l)
-    | TypedRuleVar l (GName id l) ty
+data RuleVar ty id l
+    = RuleVar l (Name id l)
+    | TypedRuleVar l (Name id l) ty
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A DEPRECATED pragma
-data GDecl_DeprPragma id l
-     = DeprPragmaDecl l [([GName id l], String)]
+data Decl_DeprPragma id l
+     = DeprPragmaDecl l [([Name id l], String)]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A WARNING pragma
-data GDecl_WarnPragma id l
-     = WarnPragmaDecl l [([GName id l], String)]
+data Decl_WarnPragma id l
+     = WarnPragmaDecl l [([Name id l], String)]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An INLINE pragma
-data GDecl_InlinePragma id l
-     = InlineSig l Bool (Maybe (GActivation l)) (GQName id l)
+data Decl_InlinePragma id l
+     = InlineSig l Bool (Maybe (Activation l)) (QName id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An INLINE CONLIKE pragma
-data GDecl_InlineConPragma id l
-     = InlineConlikeSig l (Maybe (GActivation l)) (GQName id l)
+data Decl_InlineConPragma id l
+     = InlineConlikeSig l (Maybe (Activation l)) (QName id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A SPECIALISE pragma
-data GDecl_SpecPragma ty id l
-     = SpecSig l (Maybe (GActivation l)) (GQName id l) [ty]
+data Decl_SpecPragma ty id l
+     = SpecSig l (Maybe (Activation l)) (QName id l) [ty]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A SPECIALISE INLINE pragma
-data GDecl_SpecInlinePragma ty id l
-     = SpecInlineSig l Bool (Maybe (GActivation l)) (GQName id l) [ty]
+data Decl_SpecInlinePragma ty id l
+     = SpecInlineSig l Bool (Maybe (Activation l)) (QName id l) [ty]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Activation clause of a RULES pragma.
-data GActivation l
+data Activation l
     = ActiveFrom   l Int
     | ActiveUntil  l Int
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A SPECIALISE instance pragma
-data GDecl_SpecInstPragma insthd ctx id l
+data Decl_SpecInstPragma insthd ctx id l
      = InstSig l (Maybe ctx) insthd
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An ANN pragma
-data GDecl_AnnPragma exp id l
-     = AnnPragma l (GAnnotation exp id l)
+data Decl_AnnPragma exp id l
+     = AnnPragma l (Annotation exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
-data GDef_CorePragma exp l
+data Def_CorePragma exp l
     = CorePragma l String exp      -- ^ CORE pragma
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data GDef_SCCPragma exp l
+data Def_SCCPragma exp l
     = SCCPragma l String exp      -- ^ SCC pragma
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data GDef_GenPragma exp l
+data Def_GenPragma exp l
     = GenPragma l String (Int, Int) (Int, Int) exp
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
                                             -- ^ GENERATED pragma
 
 
 
-instance Annotated (GModulePragma_Ann exp id) where
+instance Annotated (ModulePragma_Ann exp id) where
     ann (AnnModulePragma  l _) = l
 
-instance Annotated (GAnnotation exp id) where
+instance Annotated (Annotation exp id) where
     ann (Ann     l _ _) = l
     ann (TypeAnn l _ _) = l
     ann (ModuleAnn l _) = l
 
 
-instance Annotated (GDecl_RulePragma ty exp id) where
+instance Annotated (Decl_RulePragma ty exp id) where
     ann (RulePragmaDecl l _) = l
 
-instance Annotated (GRule ty exp id) where
+instance Annotated (Rule ty exp id) where
     ann (Rule l _ _ _ _ _) = l
 
-instance Annotated (GRuleVar ty id) where
+instance Annotated (RuleVar ty id) where
     ann (RuleVar l _) = l
     ann (TypedRuleVar l _ _) = l
 
-instance Annotated (GDecl_DeprPragma id) where
+instance Annotated (Decl_DeprPragma id) where
     ann (DeprPragmaDecl l _) = l
 
-instance Annotated (GDecl_WarnPragma id) where
+instance Annotated (Decl_WarnPragma id) where
     ann (WarnPragmaDecl l _) = l
 
-instance Annotated (GDecl_InlinePragma id) where
+instance Annotated (Decl_InlinePragma id) where
     ann (InlineSig l _ _ _) = l
 
-instance Annotated (GDecl_InlineConPragma id) where
+instance Annotated (Decl_InlineConPragma id) where
     ann (InlineConlikeSig l _ _) = l
 
-instance Annotated (GDecl_SpecPragma ty id) where
+instance Annotated (Decl_SpecPragma ty id) where
     ann (SpecSig l _ _ _) = l
 
-instance Annotated (GDecl_SpecInlinePragma ty id) where
+instance Annotated (Decl_SpecInlinePragma ty id) where
     ann (SpecInlineSig l _ _ _ _) = l
 
-instance Annotated GActivation where
+instance Annotated Activation where
     ann (ActiveFrom   l _) = l
     ann (ActiveUntil  l _) = l
 
 
-instance Annotated (GDecl_SpecInstPragma insthd ctx id) where
+instance Annotated (Decl_SpecInstPragma insthd ctx id) where
     ann (InstSig l _ _) = l
 
-instance Annotated (GDecl_AnnPragma exp id) where
+instance Annotated (Decl_AnnPragma exp id) where
     ann (AnnPragma l _) = l
 
-instance Annotated (GDef_CorePragma exp) where
+instance Annotated (Def_CorePragma exp) where
     ann (CorePragma l _ _)   = l
 
-instance Annotated (GDef_SCCPragma exp) where
+instance Annotated (Def_SCCPragma exp) where
     ann (SCCPragma  l _ _)   = l
 
-instance Annotated (GDef_GenPragma exp) where
+instance Annotated (Def_GenPragma exp) where
     ann (GenPragma  l _ _ _ _) = l
 
 

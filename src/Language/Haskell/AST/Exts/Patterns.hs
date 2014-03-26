@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding (GPat)
+import Language.Haskell.AST.Core hiding (Pat)
 
 
 -- | Bang patterns extension to @GPat@
@@ -22,12 +22,12 @@ data PatTySig ty pat id l
 
 -- Not really sure what this extension is....
 data PatExplTyArg ty (pat :: * -> * -> * -> *) id l
-     = PExplTypeArg l (GQName id l) ty     -- ^ Explicit generics style type argument e.g. @f {| Int |} x = ...@
+     = PExplTypeArg l (QName id l) ty     -- ^ Explicit generics style type argument e.g. @f {| Int |} x = ...@
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | n+k patterns extension to @GPat@
 data NPlusKPat (pat :: * -> * -> *) id l
-    = PNPlusK l (GName id l) Integer            -- ^ n+k pattern
+    = PNPlusK l (Name id l) Integer            -- ^ n+k pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (BangPat pat id) where

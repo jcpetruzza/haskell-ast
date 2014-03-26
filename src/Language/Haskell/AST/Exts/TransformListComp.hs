@@ -7,17 +7,17 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( GExp )
+import Language.Haskell.AST.Core hiding ( Exp )
 
 -- | Extension of the @GExp@ type with extended list comprehensions
-data GExp stmt exp id l
-     = EListComp l (exp id l) [GQualStmt stmt exp id l]  -- ^ an extended list comprehension
+data Exp stmt exp id l
+     = EListComp l (exp id l) [QualStmt stmt exp id l]  -- ^ an extended list comprehension
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A general /transqual/ in a list comprehension,
 --   which could potentially be a transform of the kind
 --   enabled by TransformListComp.
-data GQualStmt stmt exp id l
+data QualStmt stmt exp id l
     = QualStmt     l (stmt id l)            -- ^ an ordinary statement
     | ThenTrans    l (exp id l)             -- ^ @then@ /exp/
     | ThenBy       l (exp id l) (exp id l)  -- ^ @then@ /exp/ @by@ /exp/
@@ -26,10 +26,10 @@ data GQualStmt stmt exp id l
     | GroupByUsing l (exp id l) (exp id l)  -- ^ @then@ @group@ @by@ /exp/ @using@ /exp/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (GExp stmt exp id) where
+instance Annotated (Exp stmt exp id) where
     ann (EListComp l _ _) = l
 
-instance Annotated (GQualStmt stmt exp id) where
+instance Annotated (QualStmt stmt exp id) where
     ann (QualStmt     l _)   = l
     ann (ThenTrans    l _)   = l
     ann (ThenBy       l _ _) = l

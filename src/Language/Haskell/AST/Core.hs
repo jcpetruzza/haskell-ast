@@ -9,13 +9,13 @@ import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
 -- | The name of a Haskell module.
-data GModuleName id l = ModuleName l id
+data ModuleName id l = ModuleName l id
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Constructors with special syntax.
 -- These names are never qualified, and always refer to builtin type or
 -- data constructors.
-data GSpecialCon l
+data SpecialCon l
     = UnitCon l             -- ^ unit type and data constructor @()@
     | ListCon l             -- ^ list type constructor @[]@
     | FunCon  l             -- ^ function type constructor @->@
@@ -27,45 +27,45 @@ data GSpecialCon l
 
 -- | This type is used to represent qualified variables, and also
 -- qualified constructors.
-data GQName id l
-    = Qual    l (GModuleName id l) (GName id l)    -- ^ name qualified with a module name
-    | UnQual  l                   (GName id l)    -- ^ unqualified local name
-    | Special l (GSpecialCon l)  -- ^ built-in constructor with special syntax
+data QName id l
+    = Qual    l (ModuleName id l) (Name id l)    -- ^ name qualified with a module name
+    | UnQual  l                   (Name id l)    -- ^ unqualified local name
+    | Special l (SpecialCon l)  -- ^ built-in constructor with special syntax
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | This type is used to represent variables, and also constructors.
-data GName id l
+data Name id l
     = Ident  l id   -- ^ /varid/ or /conid/.
     | Symbol l id   -- ^ /varsym/ or /consym/
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Operators appearing in @infix@ declarations are never qualified.
-data GOp id l
-    = VarOp l (GName id l)    -- ^ variable operator (/varop/)
-    | ConOp l (GName id l)    -- ^ constructor operator (/conop/)
+data Op id l
+    = VarOp l (Name id l)    -- ^ variable operator (/varop/)
+    | ConOp l (Name id l)    -- ^ constructor operator (/conop/)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A name (/cname/) of a component of a class or data type in an @import@
 -- or export specification.
-data GCName id l
-    = VarName l (GName id l) -- ^ name of a method or field
-    | ConName l (GName id l) -- ^ name of a data constructor
+data CName id l
+    = VarName l (Name id l) -- ^ name of a method or field
+    | ConName l (Name id l) -- ^ name of a data constructor
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A complete Haskell source module.
-data GModule bind tydecl classreldecl declext id l
-    = Module l (Maybe (GModuleHead id l)) [GModulePragma id l] [GImportDecl id l] [GDecl bind tydecl classreldecl declext id l]
+data Module bind tydecl classreldecl declext id l
+    = Module l (Maybe (ModuleHead id l)) [ModulePragma id l] [ImportDecl id l] [Decl bind tydecl classreldecl declext id l]
     -- ^ an ordinary Haskell module
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The head of a module, including the name and export specification.
-data GModuleHead id l = ModuleHead l (GModuleName id l) (Maybe (GWarningText l)) (Maybe (GExportSpecList id l))
+data ModuleHead id l = ModuleHead l (ModuleName id l) (Maybe (WarningText l)) (Maybe (ExportSpecList id l))
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Warning text to optionally use in the module header of e.g.
 --   a deprecated module.
-data GWarningText l
+data WarningText l
     = DeprText l String
     | WarnText l String
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
@@ -73,44 +73,44 @@ data GWarningText l
 
 -- | An explicit export specification. The 'Bool' is 'True' if the export has
 -- the @type@ keyword (@-XExplicitNamespaces@)
-data GExportSpecList id l
-    = ExportSpecList l [GExportSpec id l]
+data ExportSpecList id l
+    = ExportSpecList l [ExportSpec id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An item in a module's export specification.
-data GExportSpec id l
-     = EVar l (GQName id l)                 -- ^ variable
-     | EAbs l (GQName id l)                 -- ^ @T@:
+data ExportSpec id l
+     = EVar l (QName id l)                 -- ^ variable
+     | EAbs l (QName id l)                 -- ^ @T@:
                                            --   a class or datatype exported abstractly,
                                            --   or a type synonym.
-     | EThingAll l (GQName id l)            -- ^ @T(..)@:
+     | EThingAll l (QName id l)            -- ^ @T(..)@:
                                            --   a class exported with all of its methods, or
                                            --   a datatype exported with all of its constructors.
-     | EThingWith l (GQName id l) [GCName id l]     -- ^ @T(C_1,...,C_n)@:
+     | EThingWith l (QName id l) [CName id l]     -- ^ @T(C_1,...,C_n)@:
                                            --   a class exported with some of its methods, or
                                            --   a datatype exported with some of its constructors.
-     | EModuleContents l (GModuleName id l) -- ^ @module M@:
+     | EModuleContents l (ModuleName id l) -- ^ @module M@:
                                            --   re-export a module.
-     -- | EType id l (GExportSpec id l)           -- ^ @type x@: available with @-XExplicitNamespaces@
+     -- | EType id l (ExportSpec id l)           -- ^ @type x@: available with @-XExplicitNamespaces@
 
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An import declaration.
-data GImportDecl id l = ImportDecl
+data ImportDecl id l = ImportDecl
     { importAnn :: l                             -- ^ annotation, used by parser for position of the @import@ keyword.
-    , importModule :: GModuleName id l            -- ^ name of the module imported.
+    , importModule :: ModuleName id l            -- ^ name of the module imported.
     , importQualified :: Bool                    -- ^ imported @qualified@?
     , importSrc :: Bool                          -- ^ imported with @{-\# SOURCE \#-}@?
     , importPkg :: Maybe String                  -- ^ imported with explicit package name
-    , importAs :: Maybe (GModuleName id l)        -- ^ optional alias name in an @as@ clause.
-    , importSpecs :: Maybe (GImportSpecList id l)
+    , importAs :: Maybe (ModuleName id l)        -- ^ optional alias name in an @as@ clause.
+    , importSpecs :: Maybe (ImportSpecList id l)
             -- ^ optional list of import specifications.
     }
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An explicit import specification list.
-data GImportSpecList id l
-    = ImportSpecList l Bool [GImportSpec id l]
+data ImportSpecList id l
+    = ImportSpecList l Bool [ImportSpec id l]
             -- A list of import specifications.
             -- The 'Bool' is 'True' if the names are excluded
             -- by @hiding@.
@@ -121,28 +121,28 @@ data GImportSpecList id l
 
 -- | An import specification, representing a single explicit item imported
 --   (or hidden) from a module.
-data GImportSpec id l
-     = IVar l (GName id l)           -- ^ variable
-     | IAbs l (GName id l)           -- ^ @T@:
+data ImportSpec id l
+     = IVar l (Name id l)           -- ^ variable
+     | IAbs l (Name id l)           -- ^ @T@:
                                     --   the name of a class, datatype or type synonym.
-     | IThingAll l (GName id l)      -- ^ @T(..)@:
+     | IThingAll l (Name id l)      -- ^ @T(..)@:
                                     --   a class imported with all of its methods, or
                                     --   a datatype imported with all of its constructors.
-     | IThingWith l (GName id l) [GCName id l]    -- ^ @T(C_1,...,C_n)@:
+     | IThingWith l (Name id l) [CName id l]    -- ^ @T(C_1,...,C_n)@:
                                     --   a class imported with some of its methods, or
                                     --   a datatype imported with some of its constructors.
-     -- | IType l (GImportSpec id l)    -- ^ @type ...@ (-XExplicitNamespaces)
+     -- | IType l (ImportSpec id l)    -- ^ @type ...@ (-XExplicitNamespaces)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Associativity of an operator.
-data GAssoc l
+data Assoc l
      = AssocNone  l -- ^ non-associative operator (declared with @infix@)
      | AssocLeft  l -- ^ left-associative operator (declared with @infixl@).
      | AssocRight l -- ^ right-associative operator (declared with @infixr@)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top-level declaration.
-data GDecl bind tydecl classreldecl declext id l
+data Decl bind tydecl classreldecl declext id l
      = TyDecl       l (tydecl id l)
      -- ^ A declaration of a type
      | BindDecl     l (bind id l)
@@ -154,13 +154,13 @@ data GDecl bind tydecl classreldecl declext id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A declaration of a type
-data GTypeDecl asst ty tydeclext id l
-     = TypeDecl    l (GDeclHead id l) (ty id l)
+data TypeDecl asst ty tydeclext id l
+     = TypeDecl    l (DeclHead id l) (ty id l)
      -- ^ A type declaration
-     | DataDecl    l (GDataOrNew l) (Maybe (GContext asst id l)) (GDeclHead id l) [GQualConDecl asst ty id l] (Maybe (GDeriving ty id l))
+     | DataDecl    l (DataOrNew l) (Maybe (Context asst id l)) (DeclHead id l) [QualConDecl asst ty id l] (Maybe (Deriving ty id l))
      -- ^ A data OR newtype declaration
-     | GDataDecl   l (GDataOrNew l) (Maybe (GContext asst id l)) (GDeclHead id l) (Maybe (GKind id l)) [GGadtDecl ty id l]    (Maybe (GDeriving ty id l))
-     -- ^ A data OR newtype declaration, GADT style
+     | GDataDecl   l (DataOrNew l) (Maybe (Context asst id l)) (DeclHead id l) (Maybe (Kind id l)) [GadtDecl ty id l]    (Maybe (Deriving ty id l))
+     -- ^ A data OR newtype declaration, ADT style
      | DefaultDecl l [ty id l]
      -- ^ A declaration of default types
      | TypeDeclExt (tydeclext id l)
@@ -168,53 +168,53 @@ data GTypeDecl asst ty tydeclext id l
 
 
 -- | A flag stating whether a declaration is a data or newtype declaration.
-data GDataOrNew l = DataType l | NewType l
+data DataOrNew l = DataType l | NewType l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The head of a type or class declaration.
-data GDeclHead id l
-    = DHead l (GName id l) [GTyVarBind id l]
-    | DHInfix l (GTyVarBind id l) (GName id l) (GTyVarBind id l)
-    | DHParen l (GDeclHead id l)
+data DeclHead id l
+    = DHead l (Name id l) [TyVarBind id l]
+    | DHInfix l (TyVarBind id l) (Name id l) (TyVarBind id l)
+    | DHParen l (DeclHead id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 
 -- | The head of an instance declaration.
-data GInstHead ty id l
-    = IHead l (GQName id l) [ty id l]
-    | IHInfix l (ty id l) (GQName id l) (ty id l)
-    | IHParen l (GInstHead ty id l)
+data InstHead ty id l
+    = IHead l (QName id l) [ty id l]
+    | IHInfix l (ty id l) (QName id l) (ty id l)
+    | IHParen l (InstHead ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A deriving clause following a data type declaration.
-data GDeriving ty id l = Deriving l [GInstHead ty id l]
+data Deriving ty id l = Deriving l [InstHead ty id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A binding group inside a @let@ or @where@ clause.
-data GBinds ty guard exp pat bindext id l
-    = BDecls  l [GBind ty guard exp pat bindext id l]     -- ^ An ordinary binding group
+data Binds ty guard exp pat bindext id l
+    = BDecls  l [Bind ty guard exp pat bindext id l]     -- ^ An ordinary binding group
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data GBind ty guard exp pat bindext id l
-     = FunBind l [GMatch ty guard exp pat bindext id l]
+data Bind ty guard exp pat bindext id l
+     = FunBind l [Match ty guard exp pat bindext id l]
      -- ^ A set of function binding clauses
-     | PatBind l (pat id l) (Maybe (ty id l)) (GRhs guard exp id l) {-where-} (Maybe (GBinds ty guard exp pat bindext id l))
+     | PatBind l (pat id l) (Maybe (ty id l)) (Rhs guard exp id l) {-where-} (Maybe (Binds ty guard exp pat bindext id l))
      -- ^ A pattern binding
-     | TypeSig l [GName id l] (ty id l)
+     | TypeSig l [Name id l] (ty id l)
      -- ^ A type signature declaration
-     | InfixDecl   l (GAssoc l) (Maybe Int) [GOp id l]
+     | InfixDecl   l (Assoc l) (Maybe Int) [Op id l]
      -- ^ A declaration of operator fixity
      | BindExt (bindext id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Clauses of a function binding.
-data GMatch ty guard exp pat bindext id l
-     = Match l      (GName id l) [pat id l]         (GRhs guard exp id l) {-where-} (Maybe (GBinds ty guard exp pat bindext id l))
+data Match ty guard exp pat bindext id l
+     = Match l      (Name id l) [pat id l]         (Rhs guard exp id l) {-where-} (Maybe (Binds ty guard exp pat bindext id l))
         -- ^ A clause defined with prefix notation, i.e. the function name
         --  followed by its argument patterns, the right-hand side and an
         --  optional where clause.
-     | InfixMatch l (pat id l) (GName id l) [pat id l] (GRhs guard exp id l) {-where-} (Maybe (GBinds ty guard exp pat bindext id l))
+     | InfixMatch l (pat id l) (Name id l) [pat id l] (Rhs guard exp id l) {-where-} (Maybe (Binds ty guard exp pat bindext id l))
         -- ^ A clause defined with infix notation, i.e. first its first argument
         --  pattern, then the function name, then its following argument(s),
         --  the right-hand side and an optional where clause.
@@ -224,50 +224,50 @@ data GMatch ty guard exp pat bindext id l
 
 -- | A single constructor declaration within a data type declaration,
 --   which may have an existential quantification binding.
-data GQualConDecl asst ty id l
+data QualConDecl asst ty id l
     = QualConDecl l
-        {-forall-} (Maybe [GTyVarBind id l]) {- . -} (Maybe (GContext asst id l))
-        {- => -} (GConDecl ty id l)
+        {-forall-} (Maybe [TyVarBind id l]) {- . -} (Maybe (Context asst id l))
+        {- => -} (ConDecl ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declaration of an ordinary data constructor.
-data GConDecl ty id l
-     = ConDecl l (GName id l) [GBangType ty id l]
+data ConDecl ty id l
+     = ConDecl l (Name id l) [BangType ty id l]
                 -- ^ ordinary data constructor
-     | InfixConDecl l (GBangType ty id l) (GName id l) (GBangType ty id l)
+     | InfixConDecl l (BangType ty id l) (Name id l) (BangType ty id l)
                 -- ^ infix data constructor
-     | RecDecl l (GName id l) [GFieldDecl ty id l]
+     | RecDecl l (Name id l) [FieldDecl ty id l]
                 -- ^ record constructor
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declaration of a (list of) named field(s).
-data GFieldDecl ty id l = FieldDecl l [GName id l] (GBangType ty id l)
+data FieldDecl ty id l = FieldDecl l [Name id l] (BangType ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A single constructor declaration in a GADT data type declaration.
-data GGadtDecl ty id l
-    = GadtDecl l (GName id l) (ty id l)
+data GadtDecl ty id l
+    = GadtDecl l (Name id l) (ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data GClassRelatedDecl asst ty bind classbodyext instbodyext classrelext id l
-     = ClassDecl l (Maybe (GContext asst id l)) (GDeclHead id l) [GFunDep id l] (Maybe [GClassBody bind classbodyext id l])
+data ClassRelatedDecl asst ty bind classbodyext instbodyext classrelext id l
+     = ClassDecl l (Maybe (Context asst id l)) (DeclHead id l) [FunDep id l] (Maybe [ClassBody bind classbodyext id l])
      -- ^ A declaration of a type class
-     | InstDecl  l (Maybe (GContext asst id l)) (GInstHead ty id l) (Maybe [GInstBody bind instbodyext id l])
+     | InstDecl  l (Maybe (Context asst id l)) (InstHead ty id l) (Maybe [InstBody bind instbodyext id l])
      -- ^ An declaration of a type class instance
      | ClassRelatedExt (classrelext id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | Declarations inside a class declaration.
-data GClassBody bind classbodyext id l
+data ClassBody bind classbodyext id l
     = ClsDecl    l (bind id l)
      -- ^ ordinary declaration
     | ClassBodyExt (classbodyext id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Declarations inside an instance declaration.
-data GInstBody bind instbodyext id l
+data InstBody bind instbodyext id l
     = InsDecl     l (bind id l)
     -- ^ ordinary declaration
     | InsBodyExt  (instbodyext id l)
@@ -275,16 +275,16 @@ data GInstBody bind instbodyext id l
 
 -- | The type of a constructor argument or field, optionally including
 --   a strictness annotation.
-data GBangType ty id l
+data BangType ty id l
      = BangedTy   l (ty id l) -- ^ strict component, marked with \"@!@\"
      | UnBangedTy l (ty id l) -- ^ non-strict component
      | UnpackedTy l (ty id l) -- ^ unboxed component, marked with an UNPACK pragma
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The right hand side of a function or pattern binding.
-data GRhs guard exp id l
+data Rhs guard exp id l
      = UnGuardedRhs l (exp id l) -- ^ unguarded right hand side (/exp/)
-     | GuardedRhss  l [GGuardedRhs guard exp id l]
+     | GuardedRhss  l [GuardedRhs guard exp id l]
                                  -- ^ guarded right hand side (/gdrhs/)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -292,25 +292,25 @@ data GRhs guard exp id l
 --   The guard is a series of statements when using pattern guards,
 --   otherwise it will be a single qualifier expression.
 --  NB. @guard@ can be an expression, for H98, or a list of statements, for H2010
-data GGuardedRhs guard exp id l
+data GuardedRhs guard exp id l
      = GuardedRhs l (guard id l) (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A simple type
-data GType tyext id l
-     = TyFun   l (GType tyext id l)
-                 (GType tyext id l) -- ^ function type
-     | TyApp   l (GType tyext id l)
-                 (GType tyext id l) -- ^ application of a type constructor
-     | TyVar   l (GName id l)            -- ^ type variable
-     | TyCon   l (GQName id l)           -- ^ named type or type constructor
+data Type tyext id l
+     = TyFun   l (Type tyext id l)
+                 (Type tyext id l) -- ^ function type
+     | TyApp   l (Type tyext id l)
+                 (Type tyext id l) -- ^ application of a type constructor
+     | TyVar   l (Name id l)            -- ^ type variable
+     | TyCon   l (QName id l)           -- ^ named type or type constructor
      | TyExt (tyext id l)                -- ^ an extended type
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A (perhaps) qualified type
-data GQualType asst ty id l
+data QualType asst ty id l
     = TyForall l
-        (Maybe [GTyVarBind id l])
+        (Maybe [TyVarBind id l])
         (Maybe (asst id l))
         (ty id l)          -- ^ qualified type
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
@@ -321,40 +321,40 @@ data Boxed = Boxed | Unboxed
   deriving (Eq,Ord,Show,Typeable,Data)
 
 -- | A type variable declaration, optionally with an explicit kind annotation.
-data GTyVarBind id l
-    = KindedVar   l (GName id l) (GKind id l)  -- ^ variable binding with kind annotation
-    | UnkindedVar l (GName id l)           -- ^ ordinary variable binding
+data TyVarBind id l
+    = KindedVar   l (Name id l) (Kind id l)  -- ^ variable binding with kind annotation
+    | UnkindedVar l (Name id l)           -- ^ ordinary variable binding
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An explicit kind annotation.
-data GKind id l
+data Kind id l
     = KindStar  l                    -- ^ @*@, the kind of types
     | KindBang  l                    -- ^ @!@, the kind of unboxed types
-    | KindFn    l (GKind id l) (GKind id l)  -- ^ @->@, the kind of a type constructor
-    | KindParen l (GKind id l)           -- ^ a parenthesised kind
-    | KindVar   l (GName id l)          -- ^ @k@, a kind variable (-XPolyKinds)
+    | KindFn    l (Kind id l) (Kind id l)  -- ^ @->@, the kind of a type constructor
+    | KindParen l (Kind id l)           -- ^ a parenthesised kind
+    | KindVar   l (Name id l)          -- ^ @k@, a kind variable (-XPolyKinds)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
 -- | A functional dependency, given on the form
 --   l1 l2 ... ln -> r2 r3 .. rn
-data GFunDep id l
-    = FunDep l [GName id l] [GName id l]
+data FunDep id l
+    = FunDep l [Name id l] [Name id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A context is a set of assertions
-data GContext asst id l
+data Context asst id l
     = CxSingle l (asst id l)
     | CxTuple  l [asst id l]
-    | CxParen  l (GContext asst id l)
+    | CxParen  l (Context asst id l)
     | CxEmpty  l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Class assertions.
 --   In Haskell 98, the argument would be a /tyvar/, but this definition
 --   allows multiple parameters.
-data GAsst ty asstext id l
-        = ClassA l (GQName id l) [ty id l]            -- ^ ordinary class assertion
+data Asst ty asstext id l
+        = ClassA l (QName id l) [ty id l]            -- ^ ordinary class assertion
         | AsstExt (asstext id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -362,7 +362,7 @@ data GAsst ty asstext id l
 -- Values of this type hold the abstract value of the literal, along with the
 -- precise string representation used.  For example, @10@, @0o12@ and @0xa@
 -- have the same value representation, but each carry a different string representation.
-data GLiteral l
+data Literal l
     = Char       l Char     -- ^ character literal
     | String     l String   -- ^ string literal
     | Int        l Integer  -- ^ integer literal
@@ -376,24 +376,24 @@ data GLiteral l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Haskell expressions.
-data GExp binds pat lit expext id l
-    = Var l (GQName id l)                       -- ^ variable
-    | Con l (GQName id l)                       -- ^ data constructor
+data Exp binds pat lit expext id l
+    = Var l (QName id l)                       -- ^ variable
+    | Con l (QName id l)                       -- ^ data constructor
     | Lit l lit                                 -- ^ literal constant
-    | App l (GExp binds pat lit expext id l)
-            (GExp binds pat lit expext id l)    -- ^ ordinary application
+    | App l (Exp binds pat lit expext id l)
+            (Exp binds pat lit expext id l)    -- ^ ordinary application
     | Lambda l [pat id l]
-               (GExp binds pat lit expext id l) -- ^ lambda expression
+               (Exp binds pat lit expext id l) -- ^ lambda expression
     | Let l  (binds id l)
-             (GExp binds pat lit expext id l)   -- ^ local declarations with @let@ ... @in@ ...
-    | Case l (GExp binds pat lit expext id l)
-             (GExp binds pat lit expext id l)   -- ^ @case@ /exp/ @of@ /alts/
+             (Exp binds pat lit expext id l)   -- ^ local declarations with @let@ ... @in@ ...
+    | Case l (Exp binds pat lit expext id l)
+             (Exp binds pat lit expext id l)   -- ^ @case@ /exp/ @of@ /alts/
     | ExpExt (expext id l)                      -- ^ an extended expression
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top level options pragma, preceding the module header.
-data GModulePragma id l
-    = LanguagePragma   l [GName id l]  -- ^ LANGUAGE pragma
+data ModulePragma id l
+    = LanguagePragma   l [Name id l]  -- ^ LANGUAGE pragma
     | OptionsPragma    l (Maybe Tool) String
                         -- ^ OPTIONS pragma, possibly qualified with a tool, e.g. OPTIONS_GHC
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
@@ -403,9 +403,9 @@ data Tool = GHC | HUGS | NHC98 | YHC | HADDOCK | UnknownTool String
   deriving (Eq,Ord,Show,Typeable,Data)
 
 -- | A pattern, to be matched against a value.
-data GPat patext id l
-    = PVar l (GName id l)                      -- ^ variable
-    | PApp l (GQName id l) [GPat patext id l]  -- ^ data constructor and argument patterns
+data Pat patext id l
+    = PVar l (Name id l)                      -- ^ variable
+    | PApp l (QName id l) [Pat patext id l]  -- ^ data constructor and argument patterns
     | PWildCard l                              -- ^ wildcard pattern: @_@
     | PExt (patext id l)                       -- ^ an extended pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
@@ -420,35 +420,35 @@ data OneOrMore t id l
 -----------------------------------------------------------------------------
 -- Builtin names.
 
-prelude_mod, main_mod :: l -> GModuleName String l
+prelude_mod, main_mod :: l -> ModuleName String l
 prelude_mod l = ModuleName l "Prelude"
 main_mod    l = ModuleName l "Main"
 
-main_name :: l -> GName String l
+main_name :: l -> Name String l
 main_name l = Ident l "main"
 
-unit_con_name :: l -> GQName id l
+unit_con_name :: l -> QName id l
 unit_con_name l = Special l (UnitCon l)
 
-tuple_con_name :: l -> Boxed -> Int -> GQName id l
+tuple_con_name :: l -> Boxed -> Int -> QName id l
 tuple_con_name l b i = Special l (TupleCon l b (i+1))
 
-list_cons_name :: l -> GQName id l
+list_cons_name :: l -> QName id l
 list_cons_name l = Special l (Cons l)
 
-unboxed_singleton_con_name :: l -> GQName id l
+unboxed_singleton_con_name :: l -> QName id l
 unboxed_singleton_con_name l = Special l (UnboxedSingleCon l)
 
-unit_con :: l -> GExp binds pat lit expext id l
+unit_con :: l -> Exp binds pat lit expext id l
 unit_con l = Con l $ unit_con_name l
 
-tuple_con :: l -> Boxed -> Int -> GExp binds pat lit expext id l
+tuple_con :: l -> Boxed -> Int -> Exp binds pat lit expext id l
 tuple_con l b i = Con l (tuple_con_name l b i)
 
-unboxed_singleton_con :: l -> GExp binds pat lit expext id l
+unboxed_singleton_con :: l -> Exp binds pat lit expext id l
 unboxed_singleton_con l = Con l (unboxed_singleton_con_name l)
 
-as_name, qualified_name, hiding_name, minus_name, bang_name, dot_name, star_name :: l -> GName String l
+as_name, qualified_name, hiding_name, minus_name, bang_name, dot_name, star_name :: l -> Name String l
 as_name        l = Ident  l "as"
 qualified_name l = Ident  l "qualified"
 hiding_name    l = Ident  l "hiding"
@@ -459,7 +459,7 @@ star_name      l = Symbol l "*"
 
 export_name, safe_name, unsafe_name, threadsafe_name,
   stdcall_name, ccall_name, cplusplus_name, dotnet_name,
-  jvm_name, js_name, forall_name, family_name :: l -> GName String l
+  jvm_name, js_name, forall_name, family_name :: l -> Name String l
 export_name     l = Ident l "export"
 safe_name       l = Ident l "safe"
 unsafe_name     l = Ident l "unsafe"
@@ -473,22 +473,22 @@ js_name         l = Ident l "js"
 forall_name     l = Ident l "forall"
 family_name     l = Ident l "family"
 
-unit_tycon_name, fun_tycon_name, list_tycon_name, unboxed_singleton_tycon_name :: l -> GQName id l
+unit_tycon_name, fun_tycon_name, list_tycon_name, unboxed_singleton_tycon_name :: l -> QName id l
 unit_tycon_name l = unit_con_name l
 fun_tycon_name  l = Special l (FunCon l)
 list_tycon_name l = Special l (ListCon l)
 unboxed_singleton_tycon_name l = Special l (UnboxedSingleCon l)
 
-tuple_tycon_name :: l -> Boxed -> Int -> GQName id l
+tuple_tycon_name :: l -> Boxed -> Int -> QName id l
 tuple_tycon_name l b i = tuple_con_name l b i
 
-unit_tycon, fun_tycon, list_tycon, unboxed_singleton_tycon :: l -> GType tyext id l
+unit_tycon, fun_tycon, list_tycon, unboxed_singleton_tycon :: l -> Type tyext id l
 unit_tycon l = TyCon l $ unit_tycon_name l
 fun_tycon  l = TyCon l $ fun_tycon_name  l
 list_tycon l = TyCon l $ list_tycon_name l
 unboxed_singleton_tycon l = TyCon l $ unboxed_singleton_tycon_name l
 
-tuple_tycon :: l -> Boxed -> Int -> GType tyext id l
+tuple_tycon :: l -> Boxed -> Int -> Type tyext id l
 tuple_tycon l b i = TyCon l (tuple_tycon_name l b i)
 
 
@@ -508,10 +508,10 @@ class Annotated ast where
     ann :: ast l -> l
 
 
-instance Annotated (GModuleName id) where
+instance Annotated (ModuleName id) where
     ann (ModuleName l _) = l
 
-instance Annotated GSpecialCon where
+instance Annotated SpecialCon where
     ann sc = case sc of
         UnitCon l   -> l
         ListCon l   -> l
@@ -520,39 +520,39 @@ instance Annotated GSpecialCon where
         Cons l      -> l
         UnboxedSingleCon l  -> l
 
-instance Annotated (GQName id) where
+instance Annotated (QName id) where
     ann qn = case qn of
         Qual    l _ _  -> l
         UnQual  l    _  -> l
         Special l _    -> l
 
-instance Annotated (GName id) where
+instance Annotated (Name id) where
     ann (Ident  l _) = l
     ann (Symbol l _) = l
 
-instance Annotated (GOp id) where
+instance Annotated (Op id) where
     ann (VarOp l _) = l
     ann (ConOp l _) = l
 
-instance Annotated (GCName id) where
+instance Annotated (CName id) where
     ann (VarName l _) = l
     ann (ConName l _) = l
 
-instance Annotated (GModule bind tydecl classreldecl declext id) where
+instance Annotated (Module bind tydecl classreldecl declext id) where
     ann (Module l _ _ _ _) = l
 
 
-instance Annotated (GModuleHead id) where
+instance Annotated (ModuleHead id) where
     ann (ModuleHead l _ _ _) = l
 
-instance Annotated GWarningText where
+instance Annotated WarningText where
     ann (DeprText l _) = l
     ann (WarnText l _) = l
 
-instance Annotated (GExportSpecList id) where
+instance Annotated (ExportSpecList id) where
     ann (ExportSpecList l _) = l
 
-instance Annotated (GExportSpec id) where
+instance Annotated (ExportSpec id) where
     ann es = case es of
         EVar l _       -> l
         EAbs l _       -> l
@@ -560,59 +560,59 @@ instance Annotated (GExportSpec id) where
         EThingWith l _ _ -> l
         EModuleContents l _    -> l
 
-instance Annotated (GImportDecl id) where
+instance Annotated (ImportDecl id) where
     ann (ImportDecl l _ _ _ _ _ _) = l
 
-instance Annotated (GImportSpecList id) where
+instance Annotated (ImportSpecList id) where
     ann (ImportSpecList l _ _) = l
 
-instance Annotated (GImportSpec id) where
+instance Annotated (ImportSpec id) where
     ann is = case is of
         IVar l _        -> l
         IAbs l _        -> l
         IThingAll l _   -> l
         IThingWith l _ _  -> l
 
-instance Annotated GAssoc where
+instance Annotated Assoc where
     ann (AssocNone  l) = l
     ann (AssocLeft  l) = l
     ann (AssocRight l) = l
 
-instance Annotated (GDeriving ty id) where
+instance Annotated (Deriving ty id) where
     ann (Deriving l _)    = l
 
-instance Annotated (declext id)  => Annotated (GDecl bind tydecl classreldecl declext id) where
+instance Annotated (declext id)  => Annotated (Decl bind tydecl classreldecl declext id) where
     ann decl = case decl of
         ClassRelDecl l _ -> l
         TyDecl       l _ -> l
         BindDecl     l _ -> l
         DeclExt      de  -> ann de
 
-instance Annotated (tydeclext id) => Annotated (GTypeDecl asst ty tydeclext id) where
+instance Annotated (tydeclext id) => Annotated (TypeDecl asst ty tydeclext id) where
     ann decl = case decl of
         TypeDecl    l _ _         -> l
         DataDecl    l _ _ _ _ _   -> l
         GDataDecl   l _ _ _ _ _ _ -> l
         TypeDeclExt tydeclext     -> ann tydeclext
 
-instance Annotated GDataOrNew where
+instance Annotated DataOrNew where
     ann (DataType l) = l
     ann (NewType  l) = l
 
-instance Annotated (GDeclHead id) where
+instance Annotated (DeclHead id) where
     ann (DHead l _ _)       = l
     ann (DHInfix l _ _ _) = l
     ann (DHParen l _)        = l
 
-instance Annotated (GInstHead ty id) where
+instance Annotated (InstHead ty id) where
     ann (IHead l _ _) = l
     ann (IHInfix l _ _ _) = l
     ann (IHParen l _) = l
 
-instance Annotated (GBinds ty guard exp pat bindext id) where
+instance Annotated (Binds ty guard exp pat bindext id) where
     ann (BDecls  l _) = l
 
-instance Annotated (bindext id) => Annotated  (GBind ty guard exp pat bindext id) where
+instance Annotated (bindext id) => Annotated  (Bind ty guard exp pat bindext id) where
     ann b = case b of
         FunBind   l _       -> l
         PatBind   l _ _ _ _ -> l
@@ -620,87 +620,87 @@ instance Annotated (bindext id) => Annotated  (GBind ty guard exp pat bindext id
         InfixDecl l _ _ _   -> l
         BindExt bext        -> ann bext
 
-instance Annotated (GMatch ty guard exp pat bindext id) where
+instance Annotated (Match ty guard exp pat bindext id) where
     ann (Match      l _ _ _ _)   = l
     ann (InfixMatch l _ _ _ _ _) = l
 
-instance Annotated (GQualConDecl asst ty id) where
+instance Annotated (QualConDecl asst ty id) where
     ann (QualConDecl l _ _ _) = l
 
-instance Annotated (GConDecl ty id) where
+instance Annotated (ConDecl ty id) where
     ann (ConDecl l _ _) = l
     ann (InfixConDecl l _ _ _) = l
     ann (RecDecl l _ _) = l
 
-instance Annotated (GFieldDecl ty id) where
+instance Annotated (FieldDecl ty id) where
     ann (FieldDecl l _ _) = l
 
-instance Annotated (GGadtDecl ty id) where
+instance Annotated (GadtDecl ty id) where
     ann (GadtDecl l _ _) = l
 
-instance Annotated (classrelext id) => Annotated (GClassRelatedDecl asst ty bind classbodyext instbodyext classrelext id) where
+instance Annotated (classrelext id) => Annotated (ClassRelatedDecl asst ty bind classbodyext instbodyext classrelext id) where
     ann cr = case cr of
         ClassDecl l _ _ _ _ -> l
         InstDecl  l _ _ _   -> l
         ClassRelatedExt ce  -> ann ce
 
-instance Annotated (classbodyext id) => Annotated (GClassBody bind classbodyext id) where
+instance Annotated (classbodyext id) => Annotated (ClassBody bind classbodyext id) where
     ann (ClsDecl    l _) = l
     ann (ClassBodyExt e) = ann e
 
-instance Annotated (instbodyext id) => Annotated (GInstBody bind instbodyext id) where
+instance Annotated (instbodyext id) => Annotated (InstBody bind instbodyext id) where
     ann insd = case insd of
         InsDecl    l _ -> l
         InsBodyExt e   -> ann e
 
-instance Annotated (GBangType ty id) where
+instance Annotated (BangType ty id) where
      ann (BangedTy   l _) = l
      ann (UnBangedTy l _) = l
      ann (UnpackedTy l _) = l
 
-instance Annotated (GRhs guard exp id) where
+instance Annotated (Rhs guard exp id) where
      ann (UnGuardedRhs l _) = l
      ann (GuardedRhss  l _) = l
 
-instance Annotated (GGuardedRhs guard exp id) where
+instance Annotated (GuardedRhs guard exp id) where
      ann (GuardedRhs l _ _) = l
 
-instance Annotated (GType tyext id) where
+instance Annotated (Type tyext id) where
     ann t = case t of
       TyFun   l _ _    -> l
       TyApp   l _ _    -> l
       TyVar   l _      -> l
       TyCon   l _      -> l
 
-instance Annotated (GQualType asst ty id) where
+instance Annotated (QualType asst ty id) where
     ann (TyForall l _ _ _) = l
 
-instance Annotated (GTyVarBind id) where
+instance Annotated (TyVarBind id) where
     ann (KindedVar   l _ _) = l
     ann (UnkindedVar l _)   = l
 
-instance Annotated (GKind id) where
+instance Annotated (Kind id) where
     ann (KindStar l) = l
     ann (KindBang l) = l
     ann (KindFn   l _ _) = l
     ann (KindParen l _) = l
     ann (KindVar l _) = l
 
-instance Annotated (GFunDep id) where
+instance Annotated (FunDep id) where
     ann (FunDep l _ _) = l
 
-instance Annotated (GContext asst id) where
+instance Annotated (Context asst id) where
     ann (CxSingle l _ ) = l
     ann (CxTuple  l _) = l
     ann (CxParen  l _ )  = l
     ann (CxEmpty  l)       = l
 
-instance Annotated (asstext id) => Annotated (GAsst ty asstext id) where
+instance Annotated (asstext id) => Annotated (Asst ty asstext id) where
     ann asst = case asst of
         ClassA l _ _ -> l
         AsstExt a    -> ann a
 
-instance Annotated GLiteral where
+instance Annotated Literal where
     ann lit = case lit of
         Char    l _    -> l
         String  l _    -> l
@@ -713,8 +713,7 @@ instance Annotated GLiteral where
         PrimChar   l _ -> l
         PrimString l _ -> l
 
-instance Annotated (expext id)
- => Annotated (GExp binds pat lit expext id) where
+instance Annotated (expext id) => Annotated (Exp binds pat lit expext id) where
     ann e = case e of
         Var l _        -> l
         Con l _        -> l
@@ -725,11 +724,11 @@ instance Annotated (expext id)
         Case l _ _   -> l
         ExpExt extexp -> ann extexp
 
-instance Annotated (GModulePragma id) where
+instance Annotated (ModulePragma id) where
     ann (LanguagePragma   l _) = l
     ann (OptionsPragma    l _ _) = l
 
-instance Annotated (patext id) => Annotated (GPat patext id) where
+instance Annotated (patext id) => Annotated (Pat patext id) where
     ann p = case p of
       PVar l _     -> l
       PApp l _ _   -> l

@@ -7,46 +7,46 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( GDecl )
+import Language.Haskell.AST.Core hiding ( Decl )
 
 
-data GDecl asst ty id l
-     = TypeFamDecl  l (GDeclHead id l) (Maybe (GKind id l))
+data Decl asst ty id l
+     = TypeFamDecl  l (DeclHead id l) (Maybe (Kind id l))
      -- ^ A type family declaration
-     | DataFamDecl  l {-data-}      (Maybe (GContext asst id l)) (GDeclHead id l) (Maybe (GKind id l))
+     | DataFamDecl  l {-data-}      (Maybe (Context asst id l)) (DeclHead id l) (Maybe (Kind id l))
      -- ^ A data family declaration
      | TypeInsDecl  l (ty id l) (ty id l)
      -- ^ A type family instance declaration
-     | DataInsDecl  l (GDataOrNew l) (ty id l) [GQualConDecl asst ty id l] (Maybe (GDeriving ty id l))
+     | DataInsDecl  l (DataOrNew l) (ty id l) [QualConDecl asst ty id l] (Maybe (Deriving ty id l))
      -- ^ A data family instance declaration
-     | GDataInsDecl l (GDataOrNew l) (ty id l) (Maybe (GKind id l)) [GGadtDecl ty id l] (Maybe (GDeriving ty id l))
-     -- ^ A data family instance declaration, GADT style
+     | GDataInsDecl l (DataOrNew l) (ty id l) (Maybe (Kind id l)) [GadtDecl ty id l] (Maybe (Deriving ty id l))
+     -- ^ A data family instance declaration, ADT style
     deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data GClassDecl asst ty id l
-     = ClsDataFam l (Maybe (GContext asst id l)) (GDeclHead id l) (Maybe (GKind id l))
+data ClassDecl asst ty id l
+     = ClsDataFam l (Maybe (Context asst id l)) (DeclHead id l) (Maybe (Kind id l))
              -- ^ declaration of an associated data type
-     | ClsTyFam   l (GDeclHead id l) (Maybe (GKind id l))
+     | ClsTyFam   l (DeclHead id l) (Maybe (Kind id l))
              -- ^ declaration of an associated type synonym
      | ClsTyDef   l (ty id l) (ty id l)
              -- ^ default choice for an associated type synonym
     deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data GInstDecl asst ty id l
+data InstDecl asst ty id l
     = InsType   l (ty id l) (ty id l)
             -- ^ an associated type definition
-    | InsData   l (GDataOrNew l) (ty id l) [GQualConDecl asst ty id l] (Maybe (GDeriving ty id l))
+    | InsData   l (DataOrNew l) (ty id l) [QualConDecl asst ty id l] (Maybe (Deriving ty id l))
             -- ^ an associated data type implementation
-    | InsGData  l (GDataOrNew l) (ty id l) (Maybe (GKind id l)) [GGadtDecl ty id l] (Maybe (GDeriving ty id l))
+    | InsGData  l (DataOrNew l) (ty id l) (Maybe (Kind id l)) [GadtDecl ty id l] (Maybe (Deriving ty id l))
             -- ^ an associated data type implemented using GADT style
     deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
-data GAsstEq ty id l
+data AsstEq ty id l
      = EqualP l (ty id l) (ty id l) -- ^ type equality constraint
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (GDecl asst ty id) where
+instance Annotated (Decl asst ty id) where
     ann decl = case decl of
         TypeFamDecl  l _ _       -> l
         DataFamDecl  l _ _ _     -> l
@@ -54,16 +54,16 @@ instance Annotated (GDecl asst ty id) where
         DataInsDecl  l _ _ _ _   -> l
         GDataInsDecl l _ _ _ _ _ -> l
 
-instance Annotated (GClassDecl asst ty id) where
+instance Annotated (ClassDecl asst ty id) where
     ann (ClsDataFam l _ _ _) = l
     ann (ClsTyFam   l    _ _) = l
     ann (ClsTyDef   l _ _) = l
 
-instance Annotated (GInstDecl asst ty id) where
+instance Annotated (InstDecl asst ty id) where
     ann insd = case insd of
         InsType   l _ _        -> l
         InsData   l _ _ _ _    -> l
         InsGData  l _ _ _ _ _  -> l
 
-instance Annotated (GAsstEq stmt id) where
+instance Annotated (AsstEq stmt id) where
     ann (EqualP l _ _) = l

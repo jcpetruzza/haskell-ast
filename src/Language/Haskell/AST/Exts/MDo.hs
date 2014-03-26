@@ -7,12 +7,12 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( GStmt )
+import Language.Haskell.AST.Core hiding ( Stmt )
 
 -- | Extension of @GStmt@ with mdo
-data GStmt stmt l
+data Stmt stmt l
     = MDo l [stmt] -- ^ @mdo@-expression
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (GStmt stmt) where
+instance Annotated (Stmt stmt) where
     ann (MDo l _) = l
