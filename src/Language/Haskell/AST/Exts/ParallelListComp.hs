@@ -9,10 +9,10 @@ import Data.Traversable (Traversable)
 
 import Language.Haskell.AST.Core hiding (Decl, Exp)
 
--- | Extension of @GExp@ with parallel list comprehensions
-data Exp qstmt exp l
-     = ParComp  l exp [[qstmt]]     -- ^ parallel list comprehension
+-- | Extension of @Exp@ with parallel list comprehensions
+data Exp qstmt exp id l
+     = ParComp  l (exp  id l) [[qstmt id l]]     -- ^ parallel list comprehension
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (Exp exp id) where
+instance Annotated (Exp qstmt exp id) where
     ann (ParComp l _ _) = l

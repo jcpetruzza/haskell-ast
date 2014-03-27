@@ -10,12 +10,12 @@ import Data.Traversable (Traversable)
 import Language.Haskell.AST.Core
 
 
--- | HaRP extensions to the @GPat@ type: regular list pattern
+-- | HaRP extensions to the @Pat@ type: regular list pattern
 data Pat_RegList stmt pat id l
     = PRPat l [RPat stmt pat id l]       -- ^ regular list pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
--- | HaRP extensions to the @GPat@ type: regular list pattern
+-- | HaRP extensions to the @Pat@ type: regular list pattern
 data Pat_XRegList stmt pat id l
     =  PXRPats  l [RPat stmt pat id l]   -- ^ XML regular list pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
@@ -36,11 +36,11 @@ data RPat stmt pat id l
     = RPOp l (RPat stmt pat id l) (RPatOp l)   -- ^ operator pattern, e.g. pat*
     | RPEither l (RPat stmt pat id l) (RPat stmt pat id l) -- ^ choice pattern, e.g. (1 | 2)
     | RPSeq l [RPat stmt pat id l]             -- ^ sequence pattern, e.g. (| 1, 2, 3 |)
-    | RPGuard l pat [stmt]   -- ^ guarded pattern, e.g. (| p | p < 3 |)
-    | RPCAs l (Name id l) (RPat stmt pat id l)    -- ^ non-linear variable binding, e.g. (foo\@:(1 | 2))*
-    | RPAs l (Name id l) (RPat stmt pat id l)     -- ^ linear variable binding, e.g. foo\@(1 | 2)
+    | RPGuard l (pat id l) [stmt id l]         -- ^ guarded pattern, e.g. (| p | p < 3 |)
+    | RPCAs l (Name id l) (RPat stmt pat id l) -- ^ non-linear variable binding, e.g. (foo\@:(1 | 2))*
+    | RPAs l (Name id l) (RPat stmt pat id l)  -- ^ linear variable binding, e.g. foo\@(1 | 2)
     | RPParen l (RPat stmt pat id l)           -- ^ parenthesised pattern, e.g. (2*)
-    | RPPat l pat                          -- ^ an ordinary pattern
+    | RPPat l (pat id l)                       -- ^ an ordinary pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (Pat_RegList stmt pat id) where

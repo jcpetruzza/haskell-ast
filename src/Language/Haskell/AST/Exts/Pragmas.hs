@@ -17,11 +17,11 @@ data ModulePragma_Ann exp id l
 
 -- | An annotation through an ANN pragma.
 data Annotation exp id l
-    = Ann       l (Name id l)  exp
+    = Ann       l (Name id l)  (exp id l)
     -- ^ An annotation for a declared name.
-    | TypeAnn   l (Name id l)  exp
+    | TypeAnn   l (Name id l)  (exp id l)
     -- ^ An annotation for a declared type.
-    | ModuleAnn l               exp
+    | ModuleAnn l              (exp id l)
     -- ^ An annotation for the defining module.
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -33,13 +33,13 @@ data Decl_RulePragma ty exp id l
 
 -- | The body of a RULES pragma.
 data Rule ty exp id l
-    = Rule l String (Maybe (Activation l)) (Maybe [RuleVar ty id l]) exp exp
+    = Rule l String (Maybe (Activation l)) (Maybe [RuleVar ty id l]) (exp id l) (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Variables used in a RULES pragma, optionally annotated with types
 data RuleVar ty id l
     = RuleVar l (Name id l)
-    | TypedRuleVar l (Name id l) ty
+    | TypedRuleVar l (Name id l) (ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
@@ -65,12 +65,12 @@ data Decl_InlineConPragma id l
 
 -- | A SPECIALISE pragma
 data Decl_SpecPragma ty id l
-     = SpecSig l (Maybe (Activation l)) (QName id l) [ty]
+     = SpecSig l (Maybe (Activation l)) (QName id l) [ty id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A SPECIALISE INLINE pragma
 data Decl_SpecInlinePragma ty id l
-     = SpecInlineSig l Bool (Maybe (Activation l)) (QName id l) [ty]
+     = SpecInlineSig l Bool (Maybe (Activation l)) (QName id l) [ty id l]
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Activation clause of a RULES pragma.
@@ -81,7 +81,7 @@ data Activation l
 
 -- | A SPECIALISE instance pragma
 data Decl_SpecInstPragma insthd ctx id l
-     = InstSig l (Maybe ctx) insthd
+     = InstSig l (Maybe (ctx id l)) (insthd id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An ANN pragma
@@ -90,16 +90,16 @@ data Decl_AnnPragma exp id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
-data Def_CorePragma exp l
-    = CorePragma l String exp      -- ^ CORE pragma
+data Exp_CorePragma exp id l
+    = CorePragma l String (exp id l)      -- ^ CORE pragma
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data Def_SCCPragma exp l
-    = SCCPragma l String exp      -- ^ SCC pragma
+data Exp_SCCPragma exp id l
+    = SCCPragma l String (exp id l)      -- ^ SCC pragma
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data Def_GenPragma exp l
-    = GenPragma l String (Int, Int) (Int, Int) exp
+data Exp_GenPragma exp id l
+    = GenPragma l String (Int, Int) (Int, Int) (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
                                             -- ^ GENERATED pragma
 
@@ -153,13 +153,13 @@ instance Annotated (Decl_SpecInstPragma insthd ctx id) where
 instance Annotated (Decl_AnnPragma exp id) where
     ann (AnnPragma l _) = l
 
-instance Annotated (Def_CorePragma exp) where
+instance Annotated (Exp_CorePragma exp id) where
     ann (CorePragma l _ _)   = l
 
-instance Annotated (Def_SCCPragma exp) where
+instance Annotated (Exp_SCCPragma exp id) where
     ann (SCCPragma  l _ _)   = l
 
-instance Annotated (Def_GenPragma exp) where
+instance Annotated (Exp_GenPragma exp id) where
     ann (GenPragma  l _ _ _ _) = l
 
 

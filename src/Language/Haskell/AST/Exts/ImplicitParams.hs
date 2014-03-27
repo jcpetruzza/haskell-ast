@@ -7,16 +7,17 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( Binds, Exp, Asst )
+import Language.Haskell.AST.Core hiding ( Bind, Exp, Asst )
 
 
--- | The extension of the @GBinds@ type with implicit parameters
-data Binds exp id l
+-- | The extension of the @Bind@ type with implicit parameters
+data Bind exp id l
      = IPBinds l [IPBind exp id l]   -- ^ A binding group for implicit parameters
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A binding of an implicit parameter.
-data IPBind exp id l = IPBind l (IPName id l) exp
+data IPBind exp id l
+   = IPBind l (IPName id l) (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An implicit parameter name.
@@ -26,17 +27,17 @@ data IPName id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
--- | The extension fo the @GAsst@ type with implicit parameters
+-- | The extension fo the @Asst@ type with implicit parameters
 data Asst ty id l
-     = IParam l (IPName id l) ty          -- ^ implicit parameter assertion
+     = IParam l (IPName id l) (ty id l) -- ^ implicit parameter assertion
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
--- | The extension fo the @GExp@ type with implicit parameters
+-- | The extension fo the @Exp@ type with implicit parameters
 data Exp id l
     = IPVar l (IPName id l) -- ^ implicit parameter variable
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (Binds exp id) where
+instance Annotated (Bind exp id) where
     ann (IPBinds l _)   = l
 
 instance Annotated (IPBind exp id) where

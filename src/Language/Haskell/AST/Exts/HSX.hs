@@ -10,27 +10,27 @@ import Data.Traversable (Traversable)
 import Language.Haskell.AST.Core hiding ( Module, Pat, Exp )
 
 -- | XML extenstions to the @GModule@ type
-data Module decl impdecl exp pat id l
-    = XmlPage l (ModuleName id l) [ModulePragma id l] (XName id l) [XAttr exp id l] (Maybe exp) [exp]
+data Module bind tydecl classreldecl declext mpragext exp id l
+    = XmlPage l (ModuleName id l) [ModulePragma mpragext id l] (XName id l) [XAttr exp id l] (Maybe (exp id l)) [exp id l]
     -- ^ a module consisting of a single XML document. The ModuleName never appears in the source
     --   but is needed for semantic purposes, it will be the same as the file name.
-    | XmlHybrid l (Maybe (ModuleHead id l)) [ModulePragma id l] [impdecl] [decl]
-                (XName id l) [XAttr exp id l] (Maybe exp) [exp]
+    | XmlHybrid l (Maybe (ModuleHead id l)) [ModulePragma mpragext id l] [ImportDecl id l] [Decl bind tydecl classreldecl declext id l]
+                (XName id l) [XAttr exp id l] (Maybe (exp id l)) [exp id l]
     -- ^ a hybrid module combining an XML document with an ordinary module
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
--- | XML extensions to the @GPat@ type
+-- | XML extensions to the @Pat@ type
 data Pat pat id l
-    = PXTag  l (XName id l) [PXAttr pat id l] (Maybe pat) [pat]
+    = PXTag  l (XName id l) [PXAttr pat id l] (Maybe (pat id l)) [pat id l]
                                             -- ^ XML element pattern
-    | PXETag l (XName id l) [PXAttr pat id l] (Maybe pat)
+    | PXETag l (XName id l) [PXAttr pat id l] (Maybe (pat id l))
                                             -- ^ XML singleton element pattern
     | PXPcdata l String                     -- ^ XML PCDATA pattern
-    | PXPatTag l pat            -- ^ XML embedded pattern
+    | PXPatTag l (pat id l)                 -- ^ XML embedded pattern
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An XML attribute in a pattern.
-data PXAttr pat id l = PXAttr l (XName id l) pat
+data PXAttr pat id l = PXAttr l (XName id l) (pat id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
@@ -42,23 +42,23 @@ data XName id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An xml attribute, which is a name-expression pair.
-data XAttr exp id l = XAttr l (XName id l) exp
+data XAttr exp id l = XAttr l (XName id l) (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | XML extensions to the @GExt@ type
 data Exp exp lit id l
-    = XTag l (XName id l) [XAttr exp id l] (Maybe exp) [exp]
+    = XTag l (XName id l) [XAttr exp id l] (Maybe (exp id l)) [exp id l]
                                             -- ^ xml element, with attributes and children
-    | XETag l (XName id l) [XAttr exp id l] (Maybe exp)
+    | XETag l (XName id l) [XAttr exp id l] (Maybe (exp id l))
                                             -- ^ empty xml element, with attributes
     | XPcdata l String                      -- ^ PCDATA child element
-    | XExpTag l exp                     -- ^ escaped haskell expression inside xml
-    | XChildTag l [exp]                   -- ^ children of an xml element
+    | XExpTag l (exp id l)                  -- ^ escaped haskell expression inside xml
+    | XChildTag l [exp id l]                -- ^ children of an xml element
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 
-instance Annotated (Module decl impdecl exp pat id) where
-    ann (XmlPage l _ _ _ _ _ _) = l
+instance Annotated (Module bind tydecl classreldecl declext mpragext exp id) where
+    ann (XmlPage   l _ _ _ _ _ _)     = l
     ann (XmlHybrid l _ _ _ _ _ _ _ _) = l
 
 

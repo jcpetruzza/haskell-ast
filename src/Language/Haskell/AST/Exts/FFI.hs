@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, FlexibleContexts #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
 module Language.Haskell.AST.Exts.FFI
 
 where
@@ -15,6 +15,7 @@ data Decl ty id l
      -- ^ A foreign import declaration
      | ForExp       l (CallConv l)                    (Maybe String) (Name id l) (ty id l)
      -- ^ A foreign export declaration
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | The calling convention of a foreign function call.
 data CallConv l

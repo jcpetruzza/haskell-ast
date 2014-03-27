@@ -9,9 +9,9 @@ import Data.Traversable (Traversable)
 
 import Language.Haskell.AST.Core hiding ( Pat )
 
--- | Extension of the @GPat@ with view patterns
+-- | Extension of the @Pat@ with view patterns
 data Pat exp pat id l
-    = PViewPat l exp pat            -- ^ view patterns of the form @(/exp/ -> /pat/)@
+    = PViewPat l (exp id l) (pat id l)           -- ^ view patterns of the form @(/exp/ -> /pat/)@
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (Pat exp pat id) where

@@ -7,10 +7,11 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding (Literal,Pat,Type,Exp,Bind,Binds,Asst,TypeDecl,ClassRelatedDecl)
+import Language.Haskell.AST.Core hiding (Literal,Pat,Type,Exp,Bind,Binds,Asst,TypeDecl,ClassRelatedDecl,Decl)
 import qualified Language.Haskell.AST.Core as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
 import Language.Haskell.AST.Exts.PatternGuards
+import qualified Language.Haskell.AST.Exts.FFI as FFI
 
 -- | No extensions
 data NoExts id l
@@ -113,5 +114,11 @@ type TypeDecl = Core.TypeDecl Asst Type TypeDeclExts
 type TypeDeclExts = NoExts
 
 -- | A Haskell 2010 module
-type Module = Core.Module Bind TypeDecl ClassRelatedDecl DeclExts
-type DeclExts = NoExts
+type Module = Core.Module Bind TypeDecl ClassRelatedDecl DeclExts ModulePragmaExts
+
+
+-- | Declarations
+type Decl = Core.Decl Bind TypeDecl ClassRelatedDecl DeclExts
+type DeclExts = FFI.Decl Type
+
+type ModulePragmaExts = NoExts

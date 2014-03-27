@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, FlexibleContexts #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
 module Language.Haskell.AST.Exts.TypeFamilies
 
 where
@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( Decl )
+import Language.Haskell.AST.Core hiding ( Decl, ClassBody, InstBody )
 
 
 data Decl asst ty id l
@@ -23,7 +23,7 @@ data Decl asst ty id l
      -- ^ A data family instance declaration, ADT style
     deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data ClassDecl asst ty id l
+data ClassBody asst ty id l
      = ClsDataFam l (Maybe (Context asst id l)) (DeclHead id l) (Maybe (Kind id l))
              -- ^ declaration of an associated data type
      | ClsTyFam   l (DeclHead id l) (Maybe (Kind id l))
@@ -32,7 +32,7 @@ data ClassDecl asst ty id l
              -- ^ default choice for an associated type synonym
     deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-data InstDecl asst ty id l
+data InstBody asst ty id l
     = InsType   l (ty id l) (ty id l)
             -- ^ an associated type definition
     | InsData   l (DataOrNew l) (ty id l) [QualConDecl asst ty id l] (Maybe (Deriving ty id l))
@@ -54,12 +54,12 @@ instance Annotated (Decl asst ty id) where
         DataInsDecl  l _ _ _ _   -> l
         GDataInsDecl l _ _ _ _ _ -> l
 
-instance Annotated (ClassDecl asst ty id) where
+instance Annotated (ClassBody asst ty id) where
     ann (ClsDataFam l _ _ _) = l
     ann (ClsTyFam   l    _ _) = l
     ann (ClsTyDef   l _ _) = l
 
-instance Annotated (InstDecl asst ty id) where
+instance Annotated (InstBody asst ty id) where
     ann insd = case insd of
         InsType   l _ _        -> l
         InsData   l _ _ _ _    -> l

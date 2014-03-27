@@ -10,9 +10,9 @@ import Data.Traversable (Traversable)
 import Language.Haskell.AST.Core hiding ( Stmt )
 
 -- | Extension of @GStmt@ with mdo
-data Stmt stmt l
-    = MDo l [stmt] -- ^ @mdo@-expression
+data Stmt stmt id l
+    = MDo l [stmt id l] -- ^ @mdo@-expression
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (Stmt stmt) where
+instance Annotated (Stmt stmt id) where
     ann (MDo l _) = l

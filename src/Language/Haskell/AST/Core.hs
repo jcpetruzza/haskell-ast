@@ -54,8 +54,8 @@ data CName id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A complete Haskell source module.
-data Module bind tydecl classreldecl declext id l
-    = Module l (Maybe (ModuleHead id l)) [ModulePragma id l] [ImportDecl id l] [Decl bind tydecl classreldecl declext id l]
+data Module bind tydecl classreldecl declext mpragext id l
+    = Module l (Maybe (ModuleHead id l)) [ModulePragma mpragext id l] [ImportDecl id l] [Decl bind tydecl classreldecl declext id l]
     -- ^ an ordinary Haskell module
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -392,10 +392,11 @@ data Exp binds pat lit expext id l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top level options pragma, preceding the module header.
-data ModulePragma id l
+data ModulePragma mpragext id l
     = LanguagePragma   l [Name id l]  -- ^ LANGUAGE pragma
     | OptionsPragma    l (Maybe Tool) String
                         -- ^ OPTIONS pragma, possibly qualified with a tool, e.g. OPTIONS_GHC
+    | ModulePragmaExt (mpragext id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Recognised tools for OPTIONS pragmas.
@@ -538,7 +539,7 @@ instance Annotated (CName id) where
     ann (VarName l _) = l
     ann (ConName l _) = l
 
-instance Annotated (Module bind tydecl classreldecl declext id) where
+instance Annotated (Module bind tydecl classreldecl declext mpragext id) where
     ann (Module l _ _ _ _) = l
 
 
@@ -724,9 +725,10 @@ instance Annotated (expext id) => Annotated (Exp binds pat lit expext id) where
         Case l _ _   -> l
         ExpExt extexp -> ann extexp
 
-instance Annotated (ModulePragma id) where
-    ann (LanguagePragma   l _) = l
+instance Annotated (mpragext id) => Annotated (ModulePragma mpragext id) where
+    ann (LanguagePragma   l _)   = l
     ann (OptionsPragma    l _ _) = l
+    ann (ModulePragmaExt  e)     = ann e
 
 instance Annotated (patext id) => Annotated (Pat patext id) where
     ann p = case p of
