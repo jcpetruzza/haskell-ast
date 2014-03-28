@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding (Exp, Pat, Type)
+import Language.Haskell.AST.Core hiding (Exp, Alt, Pat, Type)
 
 
 -- | Extension of @GType@ with standard syntactic sugar

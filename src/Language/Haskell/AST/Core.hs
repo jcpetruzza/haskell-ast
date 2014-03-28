@@ -387,8 +387,13 @@ data Exp binds pat lit expext id l
     | Let l  (binds id l)
              (Exp binds pat lit expext id l)   -- ^ local declarations with @let@ ... @in@ ...
     | Case l (Exp binds pat lit expext id l)
-             (Exp binds pat lit expext id l)   -- ^ @case@ /exp/ @of@ /alts/
+             [Alt binds pat lit expext id l]   -- ^ @case@ /exp/ @of@ /alts/
     | ExpExt (expext id l)                     -- ^ an extended expression
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+-- | A simple alternative in a case expression
+data Alt binds pat lit expext id l
+   =  Alt l (pat id l) (Exp binds pat lit expext id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top level options pragma, preceding the module header.
@@ -726,6 +731,9 @@ instance Annotated (expext id) => Annotated (Exp binds pat lit expext id) where
         Let l _ _      -> l
         Case l _ _   -> l
         ExpExt extexp -> ann extexp
+
+instance Annotated (Alt binds pat lit expext id) where
+    ann (Alt l _ _) = l
 
 instance Annotated (mpragext id) => Annotated (ModulePragma mpragext id) where
     ann (LanguagePragma   l _)   = l
