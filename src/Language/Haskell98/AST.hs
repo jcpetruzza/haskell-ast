@@ -2,7 +2,7 @@
 module Language.Haskell98.AST
 
 where
-
+import Prelude hiding ( exp )
 import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
@@ -27,12 +27,7 @@ deriving instance (Data id, Data l) => Data (NoExts id l)
 instance Annotated (NoExts id) where
     ann  = error "ann / Annotated NoExts"
 
--- | This type is used as annotation of @Literals@ in order to
---   store the exact representation
-newtype ExactRep s = ExactRep { getExactRep :: s }
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
-type Literal = Core.Literal (ExactRep String)
+type Literal = Core.Literal
 
 -- | A Haskell 98 pattern
 type Pat = Core.Pat PatExts

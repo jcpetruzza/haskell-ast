@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( Stmt )
+import Language.Haskell.AST.Core
 
 -- | Extension of @GStmt@ with mdo
 data Stmt stmt id l

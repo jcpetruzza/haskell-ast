@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( GuardedAlt )
+import Language.Haskell.AST.Core
 
 -- | A guard according to the PatternGuard extension
 data PatternGuard stmt id l

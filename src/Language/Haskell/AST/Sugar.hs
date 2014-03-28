@@ -22,7 +22,7 @@ data Type ty id l
 
 -- | Extension of @GPat@ with standard syntactic sugar
 data Pat lit pat id l
-     = PLit l lit                                      -- ^ literal constant
+     = PLit l (lit l)                                  -- ^ literal constant
      | PNeg l (pat id l)                               -- ^ negated pattern
      | PInfixApp l (pat id l) (QName id l) (pat id l)  -- ^ pattern with an infix data constructor
      | PTuple l Boxed [pat id l]                       -- ^ tuple pattern
@@ -148,6 +148,7 @@ instance Annotated (PatField pat id) where
 
 instance Annotated (Exp binds ty guard pat stmtext exp id) where
     ann e = case e of
+        CaseAlt l _ _          -> l
         InfixApp l _ _ _       -> l
         NegApp l _             -> l
         If l _ _ _             -> l

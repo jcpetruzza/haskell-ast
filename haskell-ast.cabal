@@ -37,6 +37,7 @@ library
   exposed-modules:
     Language.Haskell98.AST
     Language.Haskell2010.AST
+    Language.GhcHaskell.AST
 
     Language.Haskell.AST.Core
     Language.Haskell.AST.Sugar
@@ -53,8 +54,8 @@ library
   hs-source-dirs:
     src
 
---  ghc-options:
---    -Wall
+  ghc-options:
+    -Wall
 
   default-language:
     Haskell2010

@@ -2,7 +2,7 @@
 module Language.Haskell2010.AST
 
 where
-
+import Prelude hiding (exp)
 import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
@@ -10,7 +10,7 @@ import Data.Traversable (Traversable)
 import Language.Haskell.AST.Core hiding (Literal,Pat,Type,Exp,Bind,Binds,Asst,TypeDecl,ClassRelatedDecl,Decl)
 import qualified Language.Haskell.AST.Core as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
-import Language.Haskell.AST.Exts.PatternGuards
+-- import qualified Language.Haskell.AST.Exts.PatternGuards as PatternGuards
 import qualified Language.Haskell.AST.Exts.FFI as FFI
 
 -- | No extensions
@@ -28,12 +28,7 @@ deriving instance (Data id, Data l) => Data (NoExts id l)
 instance Annotated (NoExts id) where
     ann  = error "ann / Annotated NoExts"
 
--- | This type is used as annotation of @Literals@ in order to
---   store the exact representation
-newtype ExactRep s = ExactRep { getExactRep :: s }
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
-type Literal = Core.Literal (ExactRep String)
+type Literal = Core.Literal
 
 -- | A Haskell 2010 pattern
 type Pat = Core.Pat PatExts
@@ -58,9 +53,14 @@ instance Annotated (ExpExts id) where
     ann (ExpSugar exp) = ann exp
 
 
--- | Haskell 2010 uses pattern guards
+-- | Haskell 2010 uses pattern guards (we define it here instead
+-- of reusing the one in the PatternGuards module to avoid
+-- a cyclic dependency with Stmt without introducing an additional indirection)
 data Guard id l = PatternGuard l (Stmt id l)
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+instance Annotated (Guard id) where
+    ann (PatternGuard l _) = l
 
 -- | A Haskell 2010 statement
 type Stmt = Sugar.Stmt Binds Exp Pat StmtExts

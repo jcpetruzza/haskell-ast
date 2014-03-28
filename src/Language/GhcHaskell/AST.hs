@@ -2,7 +2,7 @@
 module Language.GhcHaskell.AST
 
 where
-
+import Prelude hiding ( exp )
 import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
@@ -13,13 +13,11 @@ import qualified Language.Haskell.AST.Sugar as Sugar
 
 import qualified Language.Haskell.AST.Exts.Arrows as Arrows
 import qualified Language.Haskell.AST.Exts.FFI as FFI
-import qualified Language.Haskell.AST.Exts.HSX as HSX
-import qualified Language.Haskell.AST.Exts.HaRP as HaRP
 import qualified Language.Haskell.AST.Exts.ImplicitParams as ImplicitParams
 import qualified Language.Haskell.AST.Exts.MDo as MDo
 import qualified Language.Haskell.AST.Exts.MultiParamTypeClasses as MultiParamTypeClasses
 import qualified Language.Haskell.AST.Exts.ParallelListComp as ParallelListComp
-import qualified Language.Haskell.AST.Exts.PatternGuards as PatternGuards
+-- import qualified Language.Haskell.AST.Exts.PatternGuards as PatternGuards
 import qualified Language.Haskell.AST.Exts.Patterns as Patterns
 import qualified Language.Haskell.AST.Exts.Pragmas as Pragmas
 import qualified Language.Haskell.AST.Exts.StandaloneDeriving as StandaloneDeriving
@@ -44,12 +42,7 @@ deriving instance (Data id, Data l) => Data (NoExts id l)
 instance Annotated (NoExts id) where
     ann  = error "ann / Annotated NoExts"
 
--- | This type is used as annotation of @Literals@ in order to
---   store the exact representation
-newtype ExactRep s = ExactRep { getExactRep :: s }
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
-
-type Literal = Core.Literal (ExactRep String)
+type Literal = Core.Literal
 
 -- | Patterns
 type Pat = Core.Pat PatExts
@@ -73,6 +66,7 @@ instance Annotated (PatExts id) where
       PatExplTyArg pat -> ann pat
       NPlusKPat    pat -> ann pat
       THPat        pat -> ann pat
+      ViewPat      pat -> ann pat
 
 
 -- | Expressions
@@ -110,9 +104,14 @@ instance Annotated (PragmaExp id) where
         PE2 pr -> ann pr
         PE3 pr -> ann pr
 
--- | Guards
+-- | GhcHaskell allows pattern guards (we define it here instead
+-- of reusing the one in the PatternGuards module to avoid
+-- a cyclic dependency with Stmt without introducing an additional indirection)
 data Guard id l = PatternGuard l (Stmt id l)
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+instance Annotated (Guard id) where
+    ann (PatternGuard l _) = l
 
 -- | Statements
 type Stmt = Sugar.Stmt Binds Exp Pat StmtExts

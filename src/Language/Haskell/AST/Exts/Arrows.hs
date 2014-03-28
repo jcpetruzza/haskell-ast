@@ -7,7 +7,7 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( Exp, Stmt )
+import Language.Haskell.AST.Core hiding ( Exp )
 
 data Exp exp pat id l
      = Proc           l (pat id l) (exp id l) -- ^ arrows proc: @proc@ /pat/ @->@ /exp/

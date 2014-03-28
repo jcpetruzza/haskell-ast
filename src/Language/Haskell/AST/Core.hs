@@ -363,23 +363,23 @@ data Asst ty asstext id l
 -- precise string representation used.  For example, @10@, @0o12@ and @0xa@
 -- have the same value representation, but each carry a different string representation.
 data Literal l
-    = Char       l Char     -- ^ character literal
-    | String     l String   -- ^ string literal
-    | Int        l Integer  -- ^ integer literal
-    | Frac       l Rational -- ^ floating point literal
-    | PrimInt    l Integer  -- ^ unboxed integer literal
-    | PrimWord   l Integer  -- ^ unboxed word literal
-    | PrimFloat  l Rational -- ^ unboxed float literal
-    | PrimDouble l Rational -- ^ unboxed double literal
-    | PrimChar   l Char     -- ^ unboxed character literal
-    | PrimString l String   -- ^ unboxed string literal
+    = Char       l Char     String -- ^ character literal
+    | String     l String   String -- ^ string literal
+    | Int        l Integer  String -- ^ integer literal
+    | Frac       l Rational String -- ^ floating point literal
+    | PrimInt    l Integer  String -- ^ unboxed integer literal
+    | PrimWord   l Integer  String -- ^ unboxed word literal
+    | PrimFloat  l Rational String -- ^ unboxed float literal
+    | PrimDouble l Rational String -- ^ unboxed double literal
+    | PrimChar   l Char     String -- ^ unboxed character literal
+    | PrimString l String   String -- ^ unboxed string literal
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | Haskell expressions.
 data Exp binds pat lit expext id l
     = Var l (QName id l)                       -- ^ variable
     | Con l (QName id l)                       -- ^ data constructor
-    | Lit l lit                                 -- ^ literal constant
+    | Lit l (lit  l)                           -- ^ literal constant
     | App l (Exp binds pat lit expext id l)
             (Exp binds pat lit expext id l)    -- ^ ordinary application
     | Lambda l [pat id l]
@@ -388,7 +388,7 @@ data Exp binds pat lit expext id l
              (Exp binds pat lit expext id l)   -- ^ local declarations with @let@ ... @in@ ...
     | Case l (Exp binds pat lit expext id l)
              (Exp binds pat lit expext id l)   -- ^ @case@ /exp/ @of@ /alts/
-    | ExpExt (expext id l)                      -- ^ an extended expression
+    | ExpExt (expext id l)                     -- ^ an extended expression
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A top level options pragma, preceding the module header.
@@ -594,6 +594,7 @@ instance Annotated (tydeclext id) => Annotated (TypeDecl asst ty tydeclext id) w
         TypeDecl    l _ _         -> l
         DataDecl    l _ _ _ _ _   -> l
         GDataDecl   l _ _ _ _ _ _ -> l
+        DefaultDecl l _           -> l
         TypeDeclExt tydeclext     -> ann tydeclext
 
 instance Annotated DataOrNew where
@@ -666,12 +667,13 @@ instance Annotated (Rhs guard exp id) where
 instance Annotated (GuardedRhs guard exp id) where
      ann (GuardedRhs l _ _) = l
 
-instance Annotated (Type tyext id) where
+instance Annotated (tyext id) => Annotated (Type tyext id) where
     ann t = case t of
       TyFun   l _ _    -> l
       TyApp   l _ _    -> l
       TyVar   l _      -> l
       TyCon   l _      -> l
+      TyExt   tyext    -> ann tyext
 
 instance Annotated (QualType asst ty id) where
     ann (TyForall l _ _ _) = l
@@ -703,16 +705,16 @@ instance Annotated (asstext id) => Annotated (Asst ty asstext id) where
 
 instance Annotated Literal where
     ann lit = case lit of
-        Char    l _    -> l
-        String  l _    -> l
-        Int     l _    -> l
-        Frac    l _    -> l
-        PrimInt    l _ -> l
-        PrimWord   l _ -> l
-        PrimFloat  l _ -> l
-        PrimDouble l _ -> l
-        PrimChar   l _ -> l
-        PrimString l _ -> l
+        Char       l _ _ -> l
+        String     l _ _ -> l
+        Int        l _ _ -> l
+        Frac       l _ _ -> l
+        PrimInt    l _ _ -> l
+        PrimWord   l _ _ -> l
+        PrimFloat  l _ _ -> l
+        PrimDouble l _ _ -> l
+        PrimChar   l _ _ -> l
+        PrimString l _ _ -> l
 
 instance Annotated (expext id) => Annotated (Exp binds pat lit expext id) where
     ann e = case e of
