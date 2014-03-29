@@ -311,7 +311,7 @@ data Type tyext id l
 data QualType asst ty id l
     = TyForall l
         (Maybe [TyVarBind id l])
-        (Maybe (asst id l))
+        (Maybe (Context asst id l))
         (ty id l)          -- ^ qualified type
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
