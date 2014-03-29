@@ -127,15 +127,18 @@ instance Annotated (TypeExts id) where
 
 
 -- | Binds
-type Bind  = Core.Bind  Type Guard Exp Pat BindExts
-type Binds = Core.Binds Type Guard Exp Pat BindExts
+type Bind = Core.Bind  Type Guard Exp Pat BindExts
 
-data BindExts id l
-     = BindsIP (ImplicitParams.Bind Exp id l)
+data Binds id l
+   = NormalBinds (Core.Binds Type Guard Exp Pat BindExts id l)
+   | IPBinds (ImplicitParams.Binds Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (BindExts id) where
-  ann (BindsIP b) = ann b
+type BindExts = NoExts
+
+instance Annotated (Binds id) where
+  ann (NormalBinds b) = ann b
+  ann (IPBinds     b) = ann b
 
 -- | This type is essentially the same as @Binds@, but we need it
 --   to break the mutual recursion between @Exp@ and @Binds@

@@ -7,11 +7,11 @@ import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
-import Language.Haskell.AST.Core hiding ( Bind, Exp, Asst )
+import Language.Haskell.AST.Core hiding ( Binds, Exp, Asst )
 
 
--- | The extension of the @Bind@ type with implicit parameters
-data Bind exp id l
+-- | The extension of the @Binds@ type with implicit parameters
+data Binds exp id l
      = IPBinds l [IPBind exp id l]   -- ^ A binding group for implicit parameters
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -37,7 +37,7 @@ data Exp id l
     = IPVar l (IPName id l) -- ^ implicit parameter variable
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (Bind exp id) where
+instance Annotated (Binds exp id) where
     ann (IPBinds l _)   = l
 
 instance Annotated (IPBind exp id) where
