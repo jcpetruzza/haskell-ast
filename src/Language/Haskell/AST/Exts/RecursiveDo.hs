@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
-module Language.Haskell.AST.Exts.MDo
+module Language.Haskell.AST.Exts.RecursiveDo
 
 where
 

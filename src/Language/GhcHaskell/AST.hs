@@ -16,7 +16,7 @@ import Language.Haskell.AST.Exts.NoExts
 import qualified Language.Haskell.AST.Exts.Arrows as Arrows
 import qualified Language.Haskell.AST.Exts.FFI as FFI
 import qualified Language.Haskell.AST.Exts.ImplicitParams as ImplicitParams
-import qualified Language.Haskell.AST.Exts.MDo as MDo
+import qualified Language.Haskell.AST.Exts.RecursiveDo as RecursiveDo
 import qualified Language.Haskell.AST.Exts.MultiParamTypeClasses as MultiParamTypeClasses
 import qualified Language.Haskell.AST.Exts.ParallelListComp as ParallelListComp
 -- import qualified Language.Haskell.AST.Exts.PatternGuards as PatternGuards
@@ -104,7 +104,7 @@ type Stmt = Sugar.Stmt Binds Exp Pat StmtExts
 
 data StmtExts id l
      = StmtArr (Arrows.Stmt Stmt id l)
-     | StmtMDo (MDo.Stmt Stmt id l)
+     | StmtMDo (RecursiveDo.Stmt Stmt id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (StmtExts id) where
