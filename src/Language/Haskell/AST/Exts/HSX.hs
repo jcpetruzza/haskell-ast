@@ -46,7 +46,7 @@ data XAttr exp id l = XAttr l (XName id l) (exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | XML extensions to the @GExt@ type
-data Exp exp lit id l
+data Exp exp id l
     = XTag l (XName id l) [XAttr exp id l] (Maybe (exp id l)) [exp id l]
                                             -- ^ xml element, with attributes and children
     | XETag l (XName id l) [XAttr exp id l] (Maybe (exp id l))
@@ -81,7 +81,7 @@ instance Annotated (XName id) where
 instance Annotated (XAttr exp id) where
     ann (XAttr l _ _) = l
 
-instance Annotated (Exp exp lit id) where
+instance Annotated (Exp exp id) where
     ann e = case e of
       XTag      l _ _ _ _  -> l
       XETag     l _ _ _    -> l
