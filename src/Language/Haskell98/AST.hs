@@ -39,7 +39,14 @@ instance Annotated (ExpExts id) where
     ann (ExpSugar exp) = ann exp
 
 -- | In Haskell 98, the guards of alternatives in case-expressions are just expressions
-type Guard = Exp
+data Guard id l
+     = NoGuard  l
+     | ExpGuard l (Exp id l)
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+instance Annotated (Guard id) where
+   ann (NoGuard  l)   = l
+   ann (ExpGuard l _) = l
 
 -- | A Haskell 98 statement
 type Stmt = Sugar.Stmt Binds Exp Pat StmtExts

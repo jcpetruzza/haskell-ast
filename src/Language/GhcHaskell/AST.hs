@@ -93,7 +93,7 @@ instance Annotated (PragmaExp id) where
 -- | GhcHaskell allows pattern guards (we define it here instead
 -- of reusing the one in the PatternGuards module to avoid
 -- a cyclic dependency with Stmt without introducing an additional indirection)
-data Guard id l = PatternGuard l (Stmt id l)
+data Guard id l = PatternGuard l [Stmt id l]
    deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 instance Annotated (Guard id) where
