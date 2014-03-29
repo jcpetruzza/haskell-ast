@@ -8,6 +8,7 @@ import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
 
 import Language.Haskell.AST.Core hiding ( Decl, ClassBody, InstBody )
+import Language.Haskell.AST.Exts.GADTSyntax ( GadtDecl(..) )
 
 
 data Decl asst ty id l

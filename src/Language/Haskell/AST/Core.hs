@@ -159,8 +159,6 @@ data TypeDecl asst ty tydeclext id l
      -- ^ A type declaration
      | DataDecl    l (DataOrNew l) (Maybe (Context asst id l)) (DeclHead id l) [QualConDecl asst ty id l] (Maybe (Deriving ty id l))
      -- ^ A data OR newtype declaration
-     | GDataDecl   l (DataOrNew l) (Maybe (Context asst id l)) (DeclHead id l) (Maybe (Kind id l)) [GadtDecl ty id l]    (Maybe (Deriving ty id l))
-     -- ^ A data OR newtype declaration, ADT style
      | DefaultDecl l [ty id l]
      -- ^ A declaration of default types
      | TypeDeclExt (tydeclext id l)
@@ -244,11 +242,6 @@ data ConDecl ty id l
 data FieldDecl ty id l = FieldDecl l [Name id l] (BangType ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-
--- | A single constructor declaration in a GADT data type declaration.
-data GadtDecl ty id l
-    = GadtDecl l (Name id l) (ty id l)
-  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 data ClassRelatedDecl asst ty bind classbodyext instbodyext classrelext id l
      = ClassDecl l (Maybe (Context asst id l)) (DeclHead id l) [FunDep id l] (Maybe [ClassBody bind classbodyext id l])
@@ -598,7 +591,6 @@ instance Annotated (tydeclext id) => Annotated (TypeDecl asst ty tydeclext id) w
     ann decl = case decl of
         TypeDecl    l _ _         -> l
         DataDecl    l _ _ _ _ _   -> l
-        GDataDecl   l _ _ _ _ _ _ -> l
         DefaultDecl l _           -> l
         TypeDeclExt tydeclext     -> ann tydeclext
 
@@ -641,9 +633,6 @@ instance Annotated (ConDecl ty id) where
 
 instance Annotated (FieldDecl ty id) where
     ann (FieldDecl l _ _) = l
-
-instance Annotated (GadtDecl ty id) where
-    ann (GadtDecl l _ _) = l
 
 instance Annotated (classrelext id) => Annotated (ClassRelatedDecl asst ty bind classbodyext instbodyext classrelext id) where
     ann cr = case cr of
