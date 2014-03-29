@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor, StandaloneDeriving #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveFoldable, DeriveTraversable, DeriveFunctor #-}
 module Language.GhcHaskell.AST
 
 where
@@ -10,6 +10,8 @@ import Data.Traversable (Traversable)
 import Language.Haskell.AST.Core hiding (Literal,Pat,Type,Exp,Bind,Binds,Asst,TypeDecl,ClassRelatedDecl,Decl)
 import qualified Language.Haskell.AST.Core as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
+
+import Language.Haskell.AST.Exts.NoExts
 
 import qualified Language.Haskell.AST.Exts.Arrows as Arrows
 import qualified Language.Haskell.AST.Exts.FFI as FFI
@@ -25,22 +27,6 @@ import qualified Language.Haskell.AST.Exts.TH as TH
 import qualified Language.Haskell.AST.Exts.TransformListComp as TransformListComp
 import qualified Language.Haskell.AST.Exts.TypeFamilies as TypeFamilies
 import qualified Language.Haskell.AST.Exts.ViewPatterns as ViewPatterns
-
-
--- | No extensions
-data NoExts id l
-
-deriving instance Eq (NoExts id l)
-deriving instance Ord (NoExts id l)
-deriving instance Show (NoExts id l)
-deriving instance Functor (NoExts id)
-deriving instance Foldable (NoExts id)
-deriving instance Traversable (NoExts id)
-deriving instance Typeable NoExts
-deriving instance (Data id, Data l) => Data (NoExts id l)
-
-instance Annotated (NoExts id) where
-    ann  = error "ann / Annotated NoExts"
 
 type Literal = Core.Literal
 
