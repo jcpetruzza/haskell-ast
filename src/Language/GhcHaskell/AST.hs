@@ -15,6 +15,7 @@ import Language.Haskell.AST.Exts.NoExts
 
 import qualified Language.Haskell.AST.Exts.Arrows as Arrows
 import qualified Language.Haskell.AST.Exts.FFI as FFI
+import qualified Language.Haskell.AST.Exts.GADTSyntax as GADTSyntax
 import qualified Language.Haskell.AST.Exts.ImplicitParams as ImplicitParams
 import qualified Language.Haskell.AST.Exts.RecursiveDo as RecursiveDo
 import qualified Language.Haskell.AST.Exts.MultiParamTypeClasses as MultiParamTypeClasses
@@ -173,7 +174,11 @@ type ClassRelExts  = StandaloneDeriving.ClassRelatedDecl Asst Type
 
 -- | Type declarations
 type TypeDecl = Core.TypeDecl Asst Type TypeDeclExts
-type TypeDeclExts = NoExts
+newtype TypeDeclExts id l = GADT (GADTSyntax.TypeDecl Asst Type id l)
+  deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
+
+instance Annotated (TypeDeclExts id) where
+  ann (GADT d) = ann d
 
 -- | Modules
 type Module = Core.Module Bind TypeDecl ClassRelatedDecl DeclExts ModulePragmaExts

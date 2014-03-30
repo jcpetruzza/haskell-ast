@@ -9,7 +9,7 @@ import Data.Traversable (Traversable)
 
 import Language.Haskell.AST.Core hiding ( TypeDecl )
 
-data TypeDecl asst ty tydeclext id l
+data TypeDecl asst ty id l
     = GDataDecl   l (DataOrNew l) (Maybe (Context asst id l)) (DeclHead id l) (Maybe (Kind id l)) [GadtDecl ty id l]    (Maybe (Deriving ty id l))
      -- ^ A data OR newtype declaration, GADT style
     deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
@@ -19,7 +19,7 @@ data GadtDecl ty id l
     = GadtDecl l (Name id l) (ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
-instance Annotated (TypeDecl asst ty tydeclext id) where
+instance Annotated (TypeDecl asst ty id) where
   ann (GDataDecl l _ _ _ _ _ _) = l
 
 instance Annotated (GadtDecl ty id) where
