@@ -80,8 +80,8 @@ data Activation l
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | A SPECIALISE instance pragma
-data Decl_SpecInstPragma insthd ctx id l
-     = InstSig l (Maybe (ctx id l)) (insthd id l)
+data Decl_SpecInstPragma asst ty id l
+     = InstSig l (Maybe (Context asst id l)) (InstHead ty id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
 -- | An ANN pragma
@@ -147,7 +147,7 @@ instance Annotated Activation where
     ann (ActiveUntil  l _) = l
 
 
-instance Annotated (Decl_SpecInstPragma insthd ctx id) where
+instance Annotated (Decl_SpecInstPragma asst ty id) where
     ann (InstSig l _ _) = l
 
 instance Annotated (Decl_AnnPragma exp id) where

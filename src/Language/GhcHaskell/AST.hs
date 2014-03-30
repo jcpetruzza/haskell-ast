@@ -207,7 +207,7 @@ data PragmaDecl id l
      | PD5 (Pragmas.Decl_InlineConPragma id l)
      | PD6 (Pragmas.Decl_SpecPragma Type id l)
      | PD7 (Pragmas.Decl_SpecInlinePragma Type id l)
-     | PD8 (Pragmas.Decl_SpecInstPragma (Core.InstHead Type) (Context Asst) id l)
+     | PD8 (Pragmas.Decl_SpecInstPragma Asst Type id l)
      | PD9 (Pragmas.Decl_AnnPragma Exp id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
