@@ -143,11 +143,11 @@ data Assoc l
 
 -- | A top-level declaration.
 data Decl bind tydecl classreldecl declext id l
-     = TyDecl       l (tydecl id l)
+     = TyDecl       (tydecl id l)
      -- ^ A declaration of a type
-     | BindDecl     l (bind id l)
+     | BindDecl     (bind id l)
      -- ^ A declaration that could also go on a @let@ or @where@ group
-     | ClassRelDecl l (classreldecl id l)
+     | ClassRelDecl (classreldecl id l)
      -- ^ A declaration related to the class mechanism
      | DeclExt     (declext id l)
     -- ^ An extension to declarations
@@ -580,12 +580,13 @@ instance Annotated Assoc where
 instance Annotated (Deriving ty id) where
     ann (Deriving l _)    = l
 
-instance Annotated (declext id)  => Annotated (Decl bind tydecl classreldecl declext id) where
+instance (Annotated (bind id), Annotated (tydecl id), Annotated (classreldecl id), Annotated (declext id))
+  => Annotated (Decl bind tydecl classreldecl declext id) where
     ann decl = case decl of
-        ClassRelDecl l _ -> l
-        TyDecl       l _ -> l
-        BindDecl     l _ -> l
-        DeclExt      de  -> ann de
+        ClassRelDecl d  -> ann d
+        TyDecl       d  -> ann d
+        BindDecl     d  -> ann d
+        DeclExt      d  -> ann d
 
 instance Annotated (tydeclext id) => Annotated (TypeDecl asst ty tydeclext id) where
     ann decl = case decl of
