@@ -571,7 +571,7 @@ instance HseExp ImplicitParams.Exp where
     fromHseExp (E.IPVar l ipn) = pure $ ImplicitParams.IPVar l (fromHseIPName ipn)
     fromHseExp e  = fromHseFailed e
 
-instance HseStmt stmt => HseExp (RecursiveDo.Stmt stmt) where
+instance HseStmt stmt => HseExp (RecursiveDo.Exp stmt) where
     fromHseExp (E.MDo l ss) = RecursiveDo.MDo l <$> mapM fromHseStmt ss
     fromHseExp e  = fromHseFailed e
 
