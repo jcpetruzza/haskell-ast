@@ -3,6 +3,8 @@ module Language.Haskell98.AST
 
 where
 import Prelude hiding ( exp )
+
+import Control.Applicative
 import Data.Data
 import Data.Foldable (Foldable)
 import Data.Traversable (Traversable)
@@ -13,6 +15,8 @@ import qualified Language.Haskell.AST.Core as Core
 import qualified Language.Haskell.AST.Sugar as Sugar
 import qualified Language.Haskell.AST.Exts.Patterns as Patterns
 
+import qualified Language.Haskell.Exts.Annotated.Syntax as E
+import Language.Haskell.AST.HSE
 
 type Literal = Core.Literal
 
@@ -28,6 +32,11 @@ instance Annotated (PatExts id) where
     ann (PatSugar   pat) = ann pat
     ann (PatSugar98 pat) = ann pat
 
+instance HsePat PatExts where
+    fromHsePat p = (PatSugar   <$> fromHsePat p)
+               <|> (PatSugar98 <$> fromHsePat p)
+               <|> (fromHseFailed p)
+
 -- | A Haskell 98 expression
 type Exp = Core.Exp LetBinds Pat Literal ExpExts
 
@@ -37,6 +46,10 @@ newtype ExpExts id l
 
 instance Annotated (ExpExts id) where
     ann (ExpSugar exp) = ann exp
+
+instance HseExp ExpExts where
+    fromHseExp e = (ExpSugar <$> fromHseExp e)
+               <|> (fromHseFailed e)
 
 -- | In Haskell 98, the guards of alternatives in case-expressions are just expressions
 data Guard id l
@@ -48,20 +61,21 @@ instance Annotated (Guard id) where
    ann (NoGuard  l)   = l
    ann (ExpGuard l _) = l
 
+instance HseGuard Guard where
+    fromHseGuard l ss = case ss of
+      []                -> pure $ NoGuard l
+      [E.Qualifier _ e] -> ExpGuard l <$> fromHseExp e
+      _                 -> ParseFailed l "Not a H98 guard"
+
 -- | A Haskell 98 statement
 type Stmt = Sugar.Stmt Binds Exp Pat StmtExts
 type StmtExts = NoExts
-
--- | A Haskell 98 assertion is of the form "C a", with a variable
---   (should be, e.g., a type without context, for FlexibleContexts...)
-type Assertion = Core.Asst Name AssertionExts
-type AssertionExts = NoExts
 
 -- | A Haskell 98 type
 type Type = Core.Type TypeExts
 
 data TypeExts id l
-  = QualType  (Core.QualType Assertion Type id l)
+  = QualType  (Core.QualType Asst Type id l)
   | TypeSugar (Sugar.Type Type id l)
   deriving (Eq,Ord,Show,Typeable,Data,Foldable,Traversable,Functor)
 
@@ -69,6 +83,10 @@ instance Annotated (TypeExts id) where
     ann (QualType  qty) = ann qty
     ann (TypeSugar ty)  = ann ty
 
+instance HseType TypeExts where
+    fromHseType t = (QualType  <$> fromHseType t)
+                <|> (TypeSugar <$> fromHseType t)
+                <|> (fromHseFailed t)
 
 -- | Haskell 98 binds
 type Bind  = Core.Bind  Type Guard Exp Pat BindExts
@@ -84,8 +102,14 @@ data LetBinds id l
 instance Annotated (LetBinds id) where
     ann (LetBinds l _) = l
 
--- | Haskell 98 assertions
-type Asst = Core.Asst Name NoExts
+instance HseBinds LetBinds where
+    fromHseBinds (E.BDecls l decls) = LetBinds l <$> mapM fromHseDecl decls
+    fromHseBinds binds = fromHseFailed binds
+
+
+-- | A Haskell 98 assertion is of the form "C a", with a variable
+--   (should be, e.g., a type without context, for FlexibleContexts...)
+type Asst = Core.Asst Type NoExts
 
 -- | Haskell 98 class and instance declarations
 type ClassRelatedDecl = Core.ClassRelatedDecl Asst Type Bind ClassBodyExts InstBodyExts ClassRelExts
