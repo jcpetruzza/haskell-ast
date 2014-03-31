@@ -39,6 +39,8 @@ library
     Language.Haskell98.Parser
 
     Language.Haskell2010.AST
+    Language.Haskell2010.Parser
+
     Language.GhcHaskell.AST
 
     Language.Haskell.AST.Core
